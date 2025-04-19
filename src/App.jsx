@@ -8,7 +8,7 @@ import Aboutus from './components/Aboutus';
 import Profile from './components/Profile';
 import Services from './components/Services';
 import Signup from './components/Signup';
-import OfferService from './components/offerService';
+import OfferService from './components/OfferService';
 import MyRequests from './components/MyRequests';
 
 // Placeholder for Chat component (you'll build this next)

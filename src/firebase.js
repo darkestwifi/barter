@@ -1,20 +1,21 @@
-
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore"; // 🆕 Firestore
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBcQgGLLua70sXJy79rJLj7wH18-aq-8cc",
-  authDomain: "barter-connect-e1876.firebaseapp.com",
-  projectId: "barter-connect-e1876",
-  storageBucket: "barter-connect-e1876.appspot.com",
-  messagingSenderId: "424937333267",
-  appId: "1:424937333267:web:1d78c2b47ec6718c2455e6"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID
 };
 
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
+// Set persistence to LOCAL for better user experience
+setPersistence(auth, browserLocalPersistence);
 export const db = getFirestore(app); // 🆕 Firestore instance
 
 
