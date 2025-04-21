@@ -168,7 +168,7 @@ const MyRequests = () => {
                 <p className="text-gray-500 text-sm sm:text-base">No incoming requests.</p>
               ) : (
                 <ul className="space-y-4">
-                  {receivedRequests.map((req) => (
+                  {receivedRequests.map((req) => ( 
                     <li
                       key={req.id}
                       className="p-4 bg-blue-50 rounded-lg shadow-sm flex flex-col gap-3"
