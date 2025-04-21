@@ -6,7 +6,6 @@ import {
   Briefcase, Code, Brush, Settings, BookOpen, Globe
 } from 'lucide-react';
 
-// Icon map based on category
 const categoryIcons = {
   'Web Development': <Code className="w-6 h-6 text-blue-600" />,
   'Graphic Design': <Brush className="w-6 h-6 text-pink-500" />,
@@ -67,16 +66,14 @@ const Services = () => {
 
   const uniqueCategories = [...new Set(services.map((s) => s.category))];
 
-  // Demo Ad Component with a real image and URL
   const DemoAd = () => {
     return (
-      <div className="demo-ad my-8">
+      <div className="demo-ad my-10 px-4 sm:px-0">
         <a href="https://www.w3schools.com" target="_blank" rel="noopener noreferrer">
-          <img 
-            src="https://www.w3schools.com/w3images/lights.jpg"
-            className="w-full h-auto rounded-lg shadow-lg" 
-            alt="W3Schools Ad" 
-             
+          <img
+            src="https"
+            className="w-full h-auto max-h-[300px] object-cover rounded-xl shadow-lg"
+            alt="W3Schools Ad"
           />
         </a>
       </div>
@@ -84,13 +81,13 @@ const Services = () => {
   };
 
   return (
-    <section className="min-h-screen bg-white px-6 py-16">
+    <section className="min-h-screen bg-white px-4 sm:px-6 py-16">
       <div className="max-w-6xl mx-auto text-center">
         <motion.h2
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="text-4xl font-bold text-blue-600 mb-6"
+          className="text-3xl sm:text-4xl font-bold text-blue-600 mb-6"
         >
           Our Top Services
         </motion.h2>
@@ -99,13 +96,13 @@ const Services = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
-          className="text-gray-600 mb-12 max-w-2xl mx-auto"
+          className="text-gray-600 mb-12 max-w-2xl mx-auto text-sm sm:text-base"
         >
           Discover the range of services our community offers. Click a category to view all related services.
         </motion.p>
 
         {/* Category filter buttons */}
-        <div className="flex flex-wrap justify-center gap-4 mb-10">
+        <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-10">
           {uniqueCategories.map((category, idx) => (
             <button
               key={idx}
@@ -121,26 +118,33 @@ const Services = () => {
           ))}
         </div>
 
-        <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
+        {/* Service cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredServices.map((service) => (
             <motion.div
               key={service.id}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
-              className="bg-gray-50 p-6 rounded-xl shadow hover:shadow-lg transition text-left cursor-pointer"
+              className="bg-gray-50 p-5 rounded-xl shadow hover:shadow-lg transition text-left"
             >
-              <div className="mb-4">
-                {categoryIcons[service.category] || <Briefcase className="w-6 h-6 text-gray-400" />}
+              <div className="mb-3">
+                {categoryIcons[service.category] || (
+                  <Briefcase className="w-6 h-6 text-gray-400" />
+                )}
               </div>
-              <h3 className="text-xl font-semibold mb-2 text-gray-800">
+              <h3 className="text-lg sm:text-xl font-semibold mb-1 text-gray-800">
                 {service.title}
               </h3>
-              <p className="text-sm text-blue-500 mb-1">{service.category}</p>
-              <p className="text-sm text-gray-600">{service.description}</p>
+              <p className="text-xs sm:text-sm text-blue-500 mb-1">
+                {service.category}
+              </p>
+              <p className="text-sm text-gray-600 line-clamp-3">
+                {service.description}
+              </p>
 
               <button
                 onClick={() => handleSendRequest(service)}
-                className="mt-4 bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded"
+                className="mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white text-sm px-4 py-2 rounded"
               >
                 Send Request
               </button>
@@ -148,7 +152,7 @@ const Services = () => {
           ))}
         </div>
 
-        {/* Demo Ads below the services */}
+        {/* Demo Ad */}
         <DemoAd />
       </div>
     </section>

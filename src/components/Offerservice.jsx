@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { collection, addDoc, serverTimestamp, getDocs, query, where, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import React, { useState } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { getAuth } from 'firebase/auth';
 import { db } from '../firebase'; // adjust the path based on your structure
 
@@ -11,8 +11,6 @@ const OfferService = () => {
     tags: '',
   });
 
-  const [loading, setLoading] = useState(true);
-
   const handleChange = (e) => {
     setService({ ...service, [e.target.name]: e.target.value });
   };
@@ -20,7 +18,7 @@ const OfferService = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const user = getAuth().currentUser; // Get current user from Firebase Auth
+    const user = getAuth().currentUser;
     if (!user) {
       alert('You must be logged in to offer a service!');
       return;
@@ -31,7 +29,7 @@ const OfferService = () => {
         ...service,
         tags: service.tags.split(',').map(tag => tag.trim()),
         createdAt: serverTimestamp(),
-        ownerId: user.uid, // Add the owner's UID
+        ownerId: user.uid,
       });
       console.log('Service Submitted with ID:', docRef.id);
       alert('Service successfully submitted!');
@@ -42,16 +40,17 @@ const OfferService = () => {
     }
   };
 
-  useEffect(() => {
-    // No longer fetching services as this section is removed
-  }, []);
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12">
-      <div className="w-full max-w-lg space-y-6">
-        <form onSubmit={handleSubmit} className="bg-white p-8 rounded-lg shadow-md">
-          <h2 className="text-2xl font-bold text-center text-blue-600">Offer a Service</h2>
-          
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="w-full max-w-lg sm:max-w-xl lg:max-w-2xl space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white p-6 sm:p-8 rounded-lg shadow-md"
+        >
+          <h2 className="text-2xl sm:text-3xl font-bold text-center text-blue-600 mb-6">
+            Offer a Service
+          </h2>
+
           <div>
             <label className="block mb-1 text-sm font-medium">Title</label>
             <input
@@ -105,7 +104,7 @@ const OfferService = () => {
 
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold transition"
+            className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold transition"
           >
             Submit Service
           </button>
@@ -115,4 +114,4 @@ const OfferService = () => {
   );
 };
 
-export default OfferService; 
+export default OfferService;

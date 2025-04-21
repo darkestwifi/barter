@@ -26,7 +26,6 @@ const Signup = () => {
       const { user } = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(user, { displayName: name });
 
-      // Save user profile in Firestore
       await setDoc(doc(db, 'users', user.uid), {
         name,
         email,
@@ -48,59 +47,68 @@ const Signup = () => {
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-blue-50 px-4">
+    <section className="min-h-screen flex items-center justify-center bg-blue-50 px-4 sm:px-6 py-10">
       <motion.form
         onSubmit={handleSubmit}
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="bg-white w-full max-w-sm p-6 rounded-xl shadow-lg space-y-4"
+        className="bg-white w-full max-w-md sm:max-w-sm md:max-w-md p-6 sm:p-8 rounded-2xl shadow-xl space-y-5"
       >
-        <h2 className="text-2xl font-bold text-blue-600 text-center">Sign Up</h2>
+        <h2 className="text-2xl sm:text-3xl font-bold text-blue-600 text-center">
+          Create your account
+        </h2>
 
-        {error && <p className="text-sm text-red-600 text-center">{error}</p>}
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 p-2 rounded text-center">{error}</p>
+        )}
 
-        <input
-          type="text"
-          name="name"
-          placeholder="Full Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-300 outline-none text-sm"
-        />
+        <div className="space-y-4">
+          <input
+            type="text"
+            name="name"
+            placeholder="Full Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-300 outline-none text-sm"
+          />
 
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-300 outline-none text-sm"
-        />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email Address"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-300 outline-none text-sm"
+          />
 
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-          className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-300 outline-none text-sm"
-        />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-300 outline-none text-sm"
+          />
+        </div>
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md text-sm font-semibold transition"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md text-sm font-semibold transition disabled:opacity-60"
         >
           {loading ? 'Creating Account...' : 'Create Account'}
         </button>
 
-        <p className="text-xs text-gray-500 text-center">
+        <p className="text-xs text-gray-500 text-center mt-2">
           Already a member?{' '}
-          <a href="/login" className="text-blue-600 hover:underline font-medium">
+          <a
+            href="/login"
+            className="text-blue-600 hover:underline font-medium"
+          >
             Login
           </a>
         </p>

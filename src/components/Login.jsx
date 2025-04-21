@@ -22,48 +22,48 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-blue-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-blue-50 px-4 sm:px-6 lg:px-8">
       <motion.form
         onSubmit={handleSubmit}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-sm bg-white p-6 rounded-xl shadow-md space-y-4"
+        className="w-full max-w-xs sm:max-w-sm md:max-w-md bg-white p-6 sm:p-8 rounded-xl shadow-md space-y-4 sm:space-y-5"
       >
-        <h2 className="text-2xl font-bold text-center text-blue-600">Login</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-center text-blue-600">Login</h2>
 
-        {error && <p className="text-red-600 text-sm text-center">{error}</p>}
+        {error && <p className="text-red-600 text-xs sm:text-sm text-center">{error}</p>}
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Email</label>
+          <label className="block text-xs sm:text-sm text-gray-600 mb-1">Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none text-sm"
+            className="w-full px-3 sm:px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm text-gray-600 mb-1">Password</label>
+          <label className="block text-xs sm:text-sm text-gray-600 mb-1">Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none text-sm"
+            className="w-full px-3 sm:px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-400 outline-none text-xs sm:text-sm"
           />
         </div>
 
         <button
           type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md font-semibold transition"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 sm:py-2.5 rounded-md font-semibold transition text-sm sm:text-base"
         >
           Login
         </button>
 
-        <p className="text-xs text-center text-gray-500">
+        <p className="text-xs sm:text-sm text-center text-gray-500">
           Don’t have an account?{' '}
           <Link to="/signup" className="text-blue-600 font-medium hover:underline">
             Sign up

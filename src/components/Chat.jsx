@@ -73,17 +73,19 @@ const Chat = () => {
 
   if (!currentUser) {
     return (
-      <div className="p-6 text-center text-gray-500">Loading chat...</div>
+      <div className="p-4 sm:p-6 text-center text-gray-500 text-sm sm:text-base">
+        Loading chat...
+      </div>
     );
   }
 
   return (
-    <div className="p-4 max-w-2xl mx-auto min-h-screen bg-white flex flex-col">
-      <h2 className="text-2xl font-bold text-center text-blue-600 mb-4">
+    <div className="p-4 sm:p-6 max-w-full sm:max-w-2xl mx-auto min-h-screen bg-white flex flex-col">
+      <h2 className="text-xl sm:text-2xl font-bold text-center text-blue-600 mb-3 sm:mb-4">
         Chat with User
       </h2>
 
-      <div className="flex-1 overflow-y-auto bg-gray-100 rounded-lg p-4 shadow-md mb-4 space-y-2">
+      <div className="flex-1 overflow-y-auto bg-gray-100 rounded-lg p-3 sm:p-4 shadow-md mb-3 sm:mb-4 space-y-2">
         {messages.map((msg) => {
           const isSender = msg.senderId === currentUser.uid;
           return (
@@ -92,14 +94,14 @@ const Chat = () => {
               className={`flex ${isSender ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-xs p-3 rounded-2xl shadow-sm ${
+                className={`max-w-[70%] sm:max-w-xs p-2 sm:p-3 rounded-2xl shadow-sm ${
                   isSender
                     ? 'bg-blue-600 text-white rounded-br-none'
                     : 'bg-gray-300 text-black rounded-bl-none'
                 }`}
               >
-                <p className="text-sm">{msg.text}</p>
-                <p className="text-[10px] text-gray-200 mt-1 text-right">
+                <p className="text-xs sm:text-sm">{msg.text}</p>
+                <p className="text-[9px] sm:text-[10px] text-gray-200 mt-1 text-right">
                   {msg.timestamp?.toDate
                     ? format(msg.timestamp.toDate(), 'p')
                     : ''}
@@ -114,14 +116,14 @@ const Chat = () => {
       <div className="flex gap-2">
         <input
           type="text"
-          className="flex-grow border border-gray-300 rounded-lg px-4 py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-grow border border-gray-300 rounded-lg px-3 sm:px-4 py-1.5 sm:py-2 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-xs sm:text-sm"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Type your message..."
         />
         <button
           onClick={sendMessage}
-          className="bg-blue-600 text-white px-6 py-2 rounded-lg shadow-md hover:bg-blue-700 transition"
+          className="bg-blue-600 text-white px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg shadow-md hover:bg-blue-700 transition text-xs sm:text-sm"
         >
           Send
         </button>

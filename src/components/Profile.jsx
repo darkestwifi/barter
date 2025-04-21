@@ -49,7 +49,7 @@ const Profile = () => {
 
   if (!currentUser && isOwnProfile) {
     return (
-      <div className="min-h-screen flex justify-center items-center text-red-600 font-semibold text-lg">
+      <div className="min-h-screen flex justify-center items-center text-red-600 font-semibold text-lg px-4 text-center">
         You are not logged in. Redirecting to Sign Up...
       </div>
     );
@@ -80,20 +80,22 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 py-12 px-4 flex justify-center items-center">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-xl w-full p-8 sm:p-10 flex flex-col items-center">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl p-6 sm:p-10 flex flex-col items-center space-y-6">
         {loading ? (
-          <p className="text-gray-500">Loading profile...</p>
+          <p className="text-gray-500 text-center">Loading profile...</p>
         ) : (
           <>
-            <h2 className="text-3xl font-bold text-blue-700">{user.name}</h2>
-            <p className="text-sm text-gray-500 mt-1">{user.location}</p>
+            <div className="text-center">
+              <h2 className="text-2xl sm:text-3xl font-bold text-blue-700">{user.name}</h2>
+              <p className="text-sm text-gray-500 mt-1">{user.location}</p>
+            </div>
 
-            <div className="mt-8 text-center">
+            <div className="text-center">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">About Me</h3>
               <p className="text-gray-600 leading-relaxed text-sm">{user.bio}</p>
             </div>
 
-            <div className="mt-8 text-center">
+            <div className="text-center w-full">
               <h3 className="text-xl font-semibold text-gray-800 mb-2">Skills</h3>
               <div className="flex flex-wrap justify-center gap-2">
                 {user.skills.map((skill, i) => (
@@ -108,7 +110,7 @@ const Profile = () => {
             </div>
 
             {!isOwnProfile && (
-              <div className="mt-6">
+              <div>
                 <button
                   onClick={() => navigate(`/chat/${userId}`)}
                   className="bg-green-500 text-white px-6 py-2 rounded-full text-sm font-semibold hover:bg-green-600 transition"
@@ -119,7 +121,7 @@ const Profile = () => {
             )}
 
             {isOwnProfile && (
-              <div className="mt-10 w-full flex justify-center">
+              <div className="w-full flex justify-center">
                 <button
                   onClick={handleLogout}
                   className="bg-red-100 text-red-600 px-6 py-2 rounded-full text-sm font-semibold hover:bg-red-200 transition"
