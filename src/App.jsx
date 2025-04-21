@@ -10,6 +10,7 @@ import Services from './components/Services';
 import Signup from './components/Signup';
 import OfferService from './components/Offerservice';
 import MyRequests from './components/MyRequests';
+import { Analytics } from '@vercel/analytics/react';
 
 // Placeholder for Chat component (you'll build this next)
 import Chat from './components/Chat'; // create Chat.jsx later
@@ -18,6 +19,7 @@ function App() {
   return (
     <Router>
       <Navbar />
+      <Analytics />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
