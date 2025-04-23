@@ -60,7 +60,7 @@ const Courses = () => {
           transition={{ duration: 0.4 }}
           className="text-3xl sm:text-4xl font-bold text-blue-600 text-center mb-6"
         >
-          Explore Our Services
+          Explore Our Courses
         </motion.h2>
         <motion.p
           initial={{ opacity: 0 }}
@@ -68,7 +68,7 @@ const Courses = () => {
           transition={{ delay: 0.2 }}
           className="text-gray-600 text-center mb-12 max-w-2xl mx-auto text-sm sm:text-base"
         >
-          Discover a variety of skills offered by our community.
+          Discover a variety of courses offered by our community.
         </motion.p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {allServices.map((service) => (
