@@ -1,119 +1,94 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth, db } from '../firebase';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { toast } from 'react-toastify';
 
 const Signup = () => {
-  const [formData, setFormData] = useState({ name: '', email: '', password: '' });
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+  });
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    const { name, email, password } = formData;
-
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(user, { displayName: name });
-
-      await setDoc(doc(db, 'users', user.uid), {
-        name,
-        email,
-        uid: user.uid,
-        location: 'Bareilly, India',
-        bio: 'Frontend Developer passionate about clean UI, innovation, and collaboration.',
-        skills: ['React', 'Tailwind CSS', 'Firebase', 'Teamwork'],
-        image: '/images/default-avatar.png',
-        createdAt: serverTimestamp(),
-      });
-
-      navigate(`/profile/${user.uid}`);
+      await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      toast.success('Account created successfully!');
+      navigate('/profile-setup'); // Redirect to ProfileSetup
     } catch (err) {
-      console.error(err);
-      setError(err.message || 'Something went wrong!');
-    } finally {
-      setLoading(false);
+      toast.error(err.message);
     }
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-blue-50 px-4 sm:px-6 py-10">
-      <motion.form
-        onSubmit={handleSubmit}
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="bg-white w-full max-w-md sm:max-w-sm md:max-w-md p-6 sm:p-8 rounded-2xl shadow-xl space-y-5"
-      >
-        <h2 className="text-2xl sm:text-3xl font-bold text-blue-600 text-center">
-          Create your account
+    <motion.section
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen flex items-center justify-center bg-blue-50 px-4 sm:px-6 py-10"
+    >
+      <div className="max-w-md w-full bg-white p-6 sm:p-8 rounded-xl shadow-lg">
+        <h2 className="text-2xl sm:text-3xl font-bold text-blue-600 mb-6 text-center">
+          Create Your Account
         </h2>
-
-        {error && (
-          <p className="text-sm text-red-600 bg-red-50 p-2 rounded text-center">{error}</p>
-        )}
-
-        <div className="space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-300 outline-none text-sm"
-          />
-
-          <input
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-300 outline-none text-sm"
-          />
-
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-300 outline-none text-sm"
-          />
-        </div>
-
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-md text-sm font-semibold transition disabled:opacity-60"
-        >
-          {loading ? 'Creating Account...' : 'Create Account'}
-        </button>
-
-        <p className="text-xs text-gray-500 text-center mt-2">
-          Already a member?{' '}
-          <a
-            href="/login"
-            className="text-blue-600 hover:underline font-medium"
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <input
+              type="text"
+              name="name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <input
+              type="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition"
           >
-            Login
+            Sign Up
+          </button>
+        </form>
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Already have an account?{' '}
+          <a href="/login" className="text-blue-600 hover:underline">
+            Log in
           </a>
         </p>
-      </motion.form>
-    </section>
+      </div>
+    </motion.section>
   );
 };
 

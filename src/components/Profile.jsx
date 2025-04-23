@@ -1,139 +1,199 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { User, Mail, MapPin, Info, Code, Shield, Award } from 'lucide-react';
 
 const Profile = () => {
-  const { userId } = useParams();
-  const navigate = useNavigate();
-  const auth = getAuth();
-  const [currentUser, setCurrentUser] = useState(null);
-  const [otherUser, setOtherUser] = useState(null);
+  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setCurrentUser(user);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  const isOwnProfile = !userId || userId === currentUser?.uid;
-
-  useEffect(() => {
-    if (!currentUser && isOwnProfile) {
-      const timer = setTimeout(() => navigate('/signup'), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [currentUser, isOwnProfile, navigate]);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!isOwnProfile && userId) {
-        try {
-          const userDoc = await getDoc(doc(db, 'users', userId));
-          if (userDoc.exists()) {
-            setOtherUser(userDoc.data());
-          } else {
-            console.log('No such user found in Firestore');
-          }
-        } catch (err) {
-          console.error('Error fetching user profile:', err);
+    const fetchProfile = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) {
+          toast.error('User not authenticated');
+          navigate('/signup');
+          return;
         }
-      }
-      setLoading(false);
-    };
-    fetchUser();
-  }, [userId, isOwnProfile]);
 
-  if (!currentUser && isOwnProfile) {
+        const docRef = doc(db, 'users', user.uid);
+        const docSnap = await getDoc(docRef);
+
+        if (docSnap.exists()) {
+          setProfile(docSnap.data());
+        } else {
+          toast.error('Profile not found');
+          navigate('/profile-setup');
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        toast.error(`Failed to load profile: ${error.message}`);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [navigate]);
+
+  if (loading) {
     return (
-      <div className="min-h-screen flex justify-center items-center text-red-600 font-semibold text-lg px-4 text-center">
-        You are not logged in. Redirecting to Sign Up...
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="text-xl text-gray-600"
+        >
+          Loading...
+        </motion.p>
       </div>
     );
   }
 
-  const user = isOwnProfile
-    ? {
-        name: currentUser?.displayName || currentUser?.email || 'Your Name',
-        location: 'Bareilly, India',
-        bio: 'Frontend Developer passionate about clean UI, innovation, and collaboration.',
-        skills: ['React', 'Tailwind CSS', 'Firebase', 'Teamwork'],
-      }
-    : {
-        name: otherUser?.name || 'Unknown User',
-        location: otherUser?.location || 'Unknown',
-        bio: otherUser?.bio || 'No bio available.',
-        skills: otherUser?.skills || [],
-      };
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
-    }
-  };
+  if (!profile) {
+    return null; // Redirect handled by useEffect
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-100 py-12 px-4 flex justify-center items-center">
-      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl p-6 sm:p-10 flex flex-col items-center space-y-6">
-        {loading ? (
-          <p className="text-gray-500 text-center">Loading profile...</p>
-        ) : (
-          <>
-            <div className="text-center">
-              <h2 className="text-2xl sm:text-3xl font-bold text-blue-700">{user.name}</h2>
-              <p className="text-sm text-gray-500 mt-1">{user.location}</p>
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100 px-4 sm:px-6 py-10">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-lg w-full bg-white rounded-2xl shadow-xl overflow-hidden"
+      >
+        <div className="bg-gradient-to-r from-blue-600 to-green-600 p-6">
+          <h2 className="text-3xl font-bold text-white">Your Profile</h2>
+        </div>
+        <div className="p-6 sm:p-8 space-y-6">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex items-center space-x-3"
+          >
+            <User className="w-6 h-6 text-blue-600" />
+            <div>
+              <label className="text-sm font-medium text-gray-600">Name</label>
+              <p className="text-lg font-semibold text-gray-900">{profile.name}</p>
             </div>
-
-            <div className="text-center">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">About Me</h3>
-              <p className="text-gray-600 leading-relaxed text-sm">{user.bio}</p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center space-x-3"
+          >
+            <Mail className="w-6 h-6 text-blue-600" />
+            <div>
+              <label className="text-sm font-medium text-gray-600">Email</label>
+              <p className="text-lg font-semibold text-gray-900">{profile.email}</p>
             </div>
-
-            <div className="text-center w-full">
-              <h3 className="text-xl font-semibold text-gray-800 mb-2">Skills</h3>
-              <div className="flex flex-wrap justify-center gap-2">
-                {user.skills.map((skill, i) => (
-                  <span
-                    key={i}
-                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium shadow-sm"
-                  >
-                    {skill}
-                  </span>
-                ))}
-              </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="flex items-center space-x-3"
+          >
+            <Award className="w-6 h-6 text-blue-600" />
+            <div>
+              <label className="text-sm font-medium text-gray-600">Role</label>
+              <span
+                className={`inline-block px-3 py-1 text-sm font-semibold rounded-full ${
+                  profile.role === 'mentor'
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-blue-100 text-blue-800'
+                }`}
+              >
+                {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
+              </span>
             </div>
-
-            {!isOwnProfile && (
+          </motion.div>
+          {profile.bio && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="flex items-start space-x-3"
+            >
+              <Info className="w-6 h-6 text-blue-600" />
               <div>
-                <button
-                  onClick={() => navigate(`/chat/${userId}`)}
-                  className="bg-green-500 text-white px-6 py-2 rounded-full text-sm font-semibold hover:bg-green-600 transition"
-                >
-                  Start Chat
-                </button>
+                <label className="text-sm font-medium text-gray-600">Bio</label>
+                <p className="text-lg text-gray-900">{profile.bio}</p>
               </div>
-            )}
-
-            {isOwnProfile && (
-              <div className="w-full flex justify-center">
-                <button
-                  onClick={handleLogout}
-                  className="bg-red-100 text-red-600 px-6 py-2 rounded-full text-sm font-semibold hover:bg-red-200 transition"
-                >
-                  Logout
-                </button>
+            </motion.div>
+          )}
+          {profile.location && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center space-x-3"
+            >
+              <MapPin className="w-6 h-6 text-blue-600" />
+              <div>
+                <label className="text-sm font-medium text-gray-600">Location</label>
+                <p className="text-lg text-gray-900">{profile.location}</p>
               </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+            </motion.div>
+          )}
+          {profile.role === 'mentor' && profile.skills && profile.skills.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="flex items-start space-x-3"
+            >
+              <Code className="w-6 h-6 text-blue-600" />
+              <div>
+                <label className="text-sm font-medium text-gray-600">Skills</label>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {profile.skills.map((skill, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 text-sm font-semibold text-blue-800 bg-blue-100 rounded-full"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="flex items-center space-x-3"
+          >
+            <Shield className="w-6 h-6 text-blue-600" />
+            <div>
+              <label className="text-sm font-medium text-gray-600">User ID</label>
+              <p className="text-lg text-gray-900 truncate">{profile.uid}</p>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.8 }}
+            className="flex justify-end"
+          >
+            <button
+              onClick={() => navigate('/profile-setup')}
+              className="bg-blue-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition-transform transform hover:scale-105"
+            >
+              Edit Profile
+            </button>
+          </motion.div>
+        </div>
+      </motion.div>
+    </section>
   );
 };
 

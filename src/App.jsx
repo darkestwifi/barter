@@ -11,8 +11,9 @@ import Signup from './components/Signup';
 import OfferService from './components/Offerservice';
 import MyRequests from './components/MyRequests';
 import Chat from './components/Chat';
-import Courses from './components/Courses'; // Added Courses component
+import Courses from './components/Courses';
 import Website from './components/Website';
+import ProfileSetup from './components/ProfileSetup';
 import { Analytics } from '@vercel/analytics/react';
 
 function App() {
@@ -31,8 +32,9 @@ function App() {
         <Route path="/signup" element={<Signup />} />
         <Route path="/offerServices" element={<OfferService />} />
         <Route path="/my-requests" element={<MyRequests />} />
+        <Route path="/courses" element={<Courses />} />
         <Route path="/website" element={<Website />} />
-        <Route path="/courses" element={<Courses />} /> {/* Added Courses route */}
+        <Route path="/profile-setup" element={<ProfileSetup />} />
       </Routes>
     </Router>
   );
