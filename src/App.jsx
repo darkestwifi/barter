@@ -10,10 +10,9 @@ import Services from './components/Services';
 import Signup from './components/Signup';
 import OfferService from './components/Offerservice';
 import MyRequests from './components/MyRequests';
+import Chat from './components/Chat';
+import Courses from './components/Courses'; // Added Courses component
 import { Analytics } from '@vercel/analytics/react';
-
-// Placeholder for Chat component (you'll build this next)
-import Chat from './components/Chat'; // create Chat.jsx later
 
 function App() {
   return (
@@ -25,12 +24,13 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/about" element={<Aboutus />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/profile/:userId" element={<Profile />} /> {/* View other users */}
-        <Route path="/chat/:userId" element={<Chat />} /> {/* One-to-one chat */}
+        <Route path="/profile/:userId" element={<Profile />} />
+        <Route path="/chat/:userId" element={<Chat />} />
         <Route path="/services" element={<Services />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/offerServices" element={<OfferService />} />
         <Route path="/my-requests" element={<MyRequests />} />
+        <Route path="/courses" element={<Courses />} /> {/* Added Courses route */}
       </Routes>
     </Router>
   );
