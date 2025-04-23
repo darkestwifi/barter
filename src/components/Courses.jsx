@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Briefcase, Code, Brush, Settings, BookOpen, Globe } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const categoryIcons = {
   'Web Development': <Code className="w-6 h-6 text-blue-600" />,
@@ -51,6 +52,14 @@ const allServices = [
 ];
 
 const Courses = () => {
+  const navigate = useNavigate();
+
+  const handleCardClick = (serviceId) => {
+    if (serviceId === 1) { // Only navigate for "Website Creation" card
+      navigate('/website');
+    }
+  };
+
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white">
       <div className="max-w-6xl mx-auto">
@@ -60,7 +69,7 @@ const Courses = () => {
           transition={{ duration: 0.4 }}
           className="text-3xl sm:text-4xl font-bold text-blue-600 text-center mb-6"
         >
-          Explore Our Courses
+          Explore Our Services
         </motion.h2>
         <motion.p
           initial={{ opacity: 0 }}
@@ -68,7 +77,7 @@ const Courses = () => {
           transition={{ delay: 0.2 }}
           className="text-gray-600 text-center mb-12 max-w-2xl mx-auto text-sm sm:text-base"
         >
-          Discover a variety of courses offered by our community.
+          Discover a variety of skills offered by our community.
         </motion.p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {allServices.map((service) => (
@@ -76,7 +85,8 @@ const Courses = () => {
               key={service.id}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
-              className="bg-gray-50 p-5 rounded-xl shadow hover:shadow-lg transition text-left"
+              onClick={() => handleCardClick(service.id)}
+              className={`bg-gray-50 p-5 rounded-xl shadow hover:shadow-lg transition text-left ${service.id === 1 ? 'cursor-pointer' : 'cursor-default'}`}
             >
               <div className="mb-3">
                 {categoryIcons[service.category] || (
