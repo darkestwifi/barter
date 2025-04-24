@@ -598,7 +598,7 @@ app.listen(3000, () => console.log('Server running'));`,
         className="max-w-6xl mx-auto"
       >
         {/* Header */}
-        <h1 className="text-3xl sm:text-4xl font-bold text-blue-600 mb-8 text-center">
+        <h1 className="text-3xl mt-12 sm:text-4xl font-bold text-blue-600 mb-8 text-center">
           Website Development Hub
         </h1>
 

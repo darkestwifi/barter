@@ -14,35 +14,38 @@ const ProfileSetup = () => {
     skill: '', // Single skill for mentors
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
   const navigate = useNavigate();
 
   const handleRoleSelect = (selectedRole) => {
     setRole(selectedRole);
     setFormData({ name: '', bio: '', location: '', skill: '' });
+    setErrors({});
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: '' }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.name) newErrors.name = 'Name is required';
+    if (role === 'mentor' && !formData.skill) newErrors.skill = 'Please select a skill';
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
+    
+    if (!validateForm()) return; // Form validation
+
     setIsSubmitting(true);
 
     try {
-      if (!formData.name) {
-        toast.error('Name is required');
-        setIsSubmitting(false);
-        return;
-      }
-      if (role === 'mentor' && !formData.skill) {
-        toast.error('Please select a skill');
-        setIsSubmitting(false);
-        return;
-      }
-
       const user = auth.currentUser;
       if (!user) {
         toast.error('User not authenticated');
@@ -68,39 +71,44 @@ const ProfileSetup = () => {
   };
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-blue-50 px-4 sm:px-6 py-10">
+    <section className="min-h-screen flex items-center justify-center bg-gradient-to-r from-blue-50 via-indigo-100 to-blue-50 px-6 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="max-w-md w-full bg-white p-6 sm:p-8 rounded-xl shadow-lg"
+        transition={{ duration: 0.6 }}
+        className="max-w-lg w-full bg-white p-8 rounded-lg shadow-lg transform transition-all"
       >
         {!role ? (
           <div className="text-center">
-            <h2 className="text-2xl sm:text-3xl font-bold text-blue-600 mb-6">
+            <motion.h2
+              className="text-3xl font-bold text-blue-600 mb-8"
+              initial={{ opacity: 0, y: -30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
               Choose Your Profile Type
-            </h2>
-            <p className="text-gray-600 mb-8">
-              Select whether you want to be a Mentor or a Normal user.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
+            </motion.h2>
+            <p className="text-gray-600 mb-6 text-lg">Select whether you want to be a Mentor or a Normal user.</p>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center">
+              <motion.button
                 onClick={() => handleRoleSelect('normal')}
-                className="bg-blue-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition"
+                className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-md hover:shadow-xl transition duration-300 transform hover:scale-105"
+                whileHover={{ scale: 1.05 }}
               >
                 Normal User
-              </button>
-              <button
+              </motion.button>
+              <motion.button
                 onClick={() => handleRoleSelect('mentor')}
-                className="bg-green-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:bg-green-700 transition"
+                className="bg-green-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-md hover:shadow-xl transition duration-300 transform hover:scale-105"
+                whileHover={{ scale: 1.05 }}
               >
                 Mentor
-              </button>
+              </motion.button>
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <h2 className="text-2xl sm:text-3xl font-bold text-blue-600 mb-4">
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <h2 className="text-3xl font-semibold text-blue-600 mb-6 text-center">
               {role === 'mentor' ? 'Mentor Profile Setup' : 'Normal Profile Setup'}
             </h2>
             <div>
@@ -111,9 +119,10 @@ const ProfileSetup = () => {
                 value={formData.name}
                 onChange={handleInputChange}
                 required
-                className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className={`mt-2 w-full px-4 py-3 rounded-md border ${errors.name ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all`}
                 disabled={isSubmitting}
               />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700">Bio</label>
@@ -121,7 +130,7 @@ const ProfileSetup = () => {
                 name="bio"
                 value={formData.bio}
                 onChange={handleInputChange}
-                className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="mt-2 w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                 rows="4"
                 disabled={isSubmitting}
               />
@@ -133,7 +142,7 @@ const ProfileSetup = () => {
                 name="location"
                 value={formData.location}
                 onChange={handleInputChange}
-                className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                className="mt-2 w-full px-4 py-3 rounded-md border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
                 disabled={isSubmitting}
               />
             </div>
@@ -145,7 +154,7 @@ const ProfileSetup = () => {
                   value={formData.skill}
                   onChange={handleInputChange}
                   required
-                  className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  className={`mt-2 w-full px-4 py-3 rounded-md border ${errors.skill ? 'border-red-500' : 'border-gray-300'} focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all`}
                   disabled={isSubmitting}
                 >
                   <option value="">Select a skill</option>
@@ -154,20 +163,21 @@ const ProfileSetup = () => {
                   <option value="JavaScript">JavaScript</option>
                   <option value="CSS">CSS</option>
                 </select>
+                {errors.skill && <p className="text-xs text-red-500 mt-1">{errors.skill}</p>}
               </div>
             )}
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-between gap-4">
               <button
                 type="button"
                 onClick={() => setRole(null)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                className="px-6 py-3 text-gray-600 hover:text-gray-800 text-lg"
                 disabled={isSubmitting}
               >
                 Back
               </button>
               <button
                 type="submit"
-                className="bg-blue-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
+                className="bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-blue-700 transition duration-300"
                 disabled={isSubmitting}
               >
                 {isSubmitting ? 'Saving...' : 'Save Profile'}

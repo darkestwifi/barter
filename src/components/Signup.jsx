@@ -3,11 +3,11 @@ import { motion } from 'framer-motion';
 import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import axios from 'axios';
 import { User, Mail, Lock, UserPlus } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { Link } from 'react-router-dom';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -36,13 +36,55 @@ const Signup = () => {
     setFormData({ ...formData, [name]: value });
   };
 
+  const verifyEmailWithAbstract = async (email) => {
+    const apiKey = import.meta.env.VITE_ABSTRACT_API_KEY;
+    if (!apiKey) {
+      console.error('Abstract API key is missing');
+      throw new Error('API key configuration error');
+    }
+
+    try {
+      console.log('Verifying email with Abstract API:', email);
+      const response = await axios.get('https://emailvalidation.abstractapi.com/v1/', {
+        params: {
+          api_key: apiKey,
+          email: email,
+        },
+      });
+
+      const { data } = response;
+      console.log('Abstract API response:', data);
+
+      if (!data.is_valid_format?.value) {
+        throw new Error('Invalid email format');
+      }
+      if (data.is_disposable_email?.value) {
+        throw new Error('Disposable email addresses are not allowed');
+      }
+      if (!data.is_mx_found?.value) {
+        throw new Error('Email domain does not exist');
+      }
+      if (!data.is_smtp_valid?.value) {
+        throw new Error('Email address is not deliverable');
+      }
+      if (data.quality_score < 0.7) {
+        throw new Error('Email quality is too low');
+      }
+
+      return true;
+    } catch (err) {
+      console.error('Email verification failed:', err.response?.data || err.message);
+      throw new Error(err.message || 'Email verification failed');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting || isCheckingEmail) return;
     setIsCheckingEmail(true);
 
     try {
-      // Validate email
+      // Validate email format
       if (!formData.email || typeof formData.email !== 'string') {
         console.log('Invalid email:', formData.email);
         toast.error('Please enter a valid email address');
@@ -50,8 +92,12 @@ const Signup = () => {
         return;
       }
 
-      console.log('Checking Firebase email:', formData.email);
+      // Verify email with Abstract API
+      console.log('Starting email verification for:', formData.email);
+      await verifyEmailWithAbstract(formData.email);
+
       // Check if email is already registered in Firebase
+      console.log('Checking Firebase email:', formData.email);
       const signInMethods = await fetchSignInMethodsForEmail(auth, formData.email);
       if (signInMethods.length > 0) {
         console.log('Email already in use');
@@ -74,9 +120,10 @@ const Signup = () => {
         role: 'student',
         uid: user.uid,
         createdAt: new Date().toISOString(),
+        emailVerified: true, // Mark as verified via Abstract API
       });
 
-      console.log('Account created and profile saved');
+      console.log('Account created, redirecting to /profile-setup');
       toast.success('Account created successfully!');
       navigate('/profile-setup');
     } catch (err) {
@@ -101,7 +148,7 @@ const Signup = () => {
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-600">Name</label>
+            <label className="block text-sm font-medium text-gray-700">Name</label>
             <div className="mt-1 relative">
               <User className="absolute top-2.5 left-3 w-4 h-4 text-gray-400" />
               <input
@@ -116,7 +163,7 @@ const Signup = () => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600">Email</label>
+            <label className="block text-sm font-medium text-gray-700">Email</label>
             <div className="mt-1 relative">
               <Mail className="absolute top-2.5 left-3 w-4 h-4 text-gray-400" />
               <input
@@ -131,7 +178,7 @@ const Signup = () => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-600">Password</label>
+            <label className="block text-sm font-medium text-gray-700">Password</label>
             <div className="mt-1 relative">
               <Lock className="absolute top-2.5 left-3 w-4 h-4 text-gray-400" />
               <input

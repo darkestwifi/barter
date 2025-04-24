@@ -18,7 +18,6 @@ const Notes = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  // Fetch notes
   useEffect(() => {
     if (!user) return;
     const fetchNotes = async () => {
@@ -34,13 +33,11 @@ const Notes = () => {
     fetchNotes();
   }, [user]);
 
-  // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle create/edit note submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
@@ -67,7 +64,6 @@ const Notes = () => {
       };
 
       if (isEditing) {
-        // Update existing note
         const noteRef = doc(db, `users/${user.uid}/notes`, editNoteId);
         await updateDoc(noteRef, noteData);
         setNotes((prev) =>
@@ -77,7 +73,6 @@ const Notes = () => {
         );
         toast.success('Note updated successfully!');
       } else {
-        // Create new note
         noteData.createdAt = new Date().toISOString();
         const notesRef = collection(db, `users/${user.uid}/notes`);
         const docRef = await addDoc(notesRef, noteData);
@@ -85,7 +80,6 @@ const Notes = () => {
         toast.success('Note created successfully!');
       }
 
-      // Reset form
       setFormData({ title: '', body: '' });
       setShowForm(false);
       setIsEditing(false);
@@ -98,7 +92,6 @@ const Notes = () => {
     }
   };
 
-  // Handle edit note
   const handleEdit = (note) => {
     setFormData({ title: note.title, body: note.body });
     setIsEditing(true);
@@ -106,7 +99,6 @@ const Notes = () => {
     setShowForm(true);
   };
 
-  // Handle delete note
   const handleDelete = async (noteId) => {
     try {
       const noteRef = doc(db, `users/${user.uid}/notes`, noteId);
@@ -119,12 +111,10 @@ const Notes = () => {
     }
   };
 
-  // Handle view note
   const handleViewNote = (note) => {
     setViewNote(note);
   };
 
-  // Close modal
   const closeModal = () => {
     setViewNote(null);
   };
@@ -156,7 +146,7 @@ const Notes = () => {
         transition={{ duration: 0.5 }}
         className="max-w-4xl mx-auto"
       >
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between mt-12 items-center mb-6">
           <h1 className="text-3xl font-bold text-blue-600">My Notes</h1>
           <button
             onClick={() => {
@@ -171,7 +161,6 @@ const Notes = () => {
           </button>
         </div>
 
-        {/* Note Creation/Edit Form */}
         <AnimatePresence>
           {showForm && (
             <motion.div
@@ -230,11 +219,10 @@ const Notes = () => {
           )}
         </AnimatePresence>
 
-        {/* Notes Grid */}
         {notes.length === 0 ? (
           <p className="text-gray-600 text-center">No notes yet. Create your first note!</p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {notes.map((note) => (
               <motion.div
                 key={note.id}
@@ -278,7 +266,6 @@ const Notes = () => {
           </div>
         )}
 
-        {/* View Note Modal */}
         <AnimatePresence>
           {viewNote && (
             <motion.div

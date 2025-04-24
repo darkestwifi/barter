@@ -5,7 +5,7 @@ import { auth, db } from '../firebase';
 import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { User, Mail, MapPin, Info, Code, Shield, Award, Brain, CheckCircle, XCircle, FileText, LogOut } from 'lucide-react';
+import { User, Mail, Info, Code, Award, CheckCircle, XCircle } from 'lucide-react';
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
@@ -17,7 +17,6 @@ const Profile = () => {
   const [randomQuestions, setRandomQuestions] = useState([]);
   const navigate = useNavigate();
 
-  // Skill-specific quiz questions (20 per skill)
   const quizQuestions = {
     React: [
       { id: 1, question: 'What is a React component?', options: ['A) Function or class returning UI', 'B) CSS style', 'C) Database query', 'D) HTTP request'], correctAnswer: 'A' },
@@ -55,7 +54,7 @@ const Profile = () => {
       { id: 11, question: 'What is the print() function?', options: ['A) Outputs to console', 'B) Saves to file', 'C) Fetches data', 'D) Styles text'], correctAnswer: 'A' },
       { id: 12, question: 'What does range() generate?', options: ['A) Sequence of numbers', 'B) Random values', 'C) Key-value pairs', 'D) HTML tags'], correctAnswer: 'A' },
       { id: 13, question: 'What is a Python lambda?', options: ['A) Anonymous function', 'B) Class definition', 'C) Loop structure', 'D) Module import'], correctAnswer: 'A' },
-      { id: 14, question: 'What is list comprehension?', options: ['A) Concise list creation', 'B) Error handling', 'C) File reading', 'D) Styling lists'], correctAnswer: 'A' },
+      { id: 14, question: 'What roster comprehension?', options: ['A) Concise list creation', 'B) Error handling', 'C) File reading', 'D) Styling lists'], correctAnswer: 'A' },
       { id: 15, question: 'What does try-except do?', options: ['A) Handles exceptions', 'B) Defines functions', 'C) Loops data', 'D) Imports modules'], correctAnswer: 'A' },
       { id: 16, question: 'What is __init__ in Python?', options: ['A) Constructor method', 'B) Loop initializer', 'C) Variable setter', 'D) Module loader'], correctAnswer: 'A' },
       { id: 17, question: 'What is a Python set?', options: ['A) Unique, unordered collection', 'B) Ordered list', 'C) Key-value store', 'D) Immutable array'], correctAnswer: 'A' },
@@ -113,9 +112,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const user = auth.currentUser;
-        console.log('Fetching profile, currentUser:', user);
         if (!user) {
-          console.log('No user, redirecting to /login');
           toast.error('You are not logged in, please log in');
           navigate('/login');
           return;
@@ -126,21 +123,16 @@ const Profile = () => {
 
         if (docSnap.exists()) {
           const profileData = docSnap.data();
-          console.log('Profile data:', profileData);
-          // Ensure role exists, default to 'student' if missing
           if (!profileData.role) {
             profileData.role = 'student';
             await setDoc(docRef, { role: 'student' }, { merge: true });
-            console.log('Set default role to student');
           }
           setProfile(profileData);
         } else {
-          console.log('Profile not found, redirecting to /profile-setup');
           toast.error('Profile not found');
           navigate('/profile-setup');
         }
       } catch (error) {
-        console.error('Error fetching profile:', error);
         toast.error(`Failed to load profile: ${error.message}`);
       } finally {
         setLoading(false);
@@ -150,28 +142,21 @@ const Profile = () => {
     fetchProfile();
   }, [navigate]);
 
-  // Handle logout
   const handleLogout = async () => {
     try {
-      console.log('Attempting logout');
       await signOut(auth);
-      console.log('Logout successful');
       toast.success('Logged out successfully');
       navigate('/login');
     } catch (error) {
-      console.error('Error logging out:', error);
       toast.error('Failed to log out');
     }
   };
 
-  // Select 5 random quiz questions for the mentor's skill
   const handleShowQuiz = () => {
     if (!profile?.skill || !quizQuestions[profile.skill]) {
-      console.log('No quiz available for skill:', profile?.skill);
       toast.error('No quiz available for this skill');
       return;
     }
-    console.log('Showing quiz for skill:', profile.skill);
     const shuffled = [...quizQuestions[profile.skill]].sort(() => Math.random() - 0.5);
     setRandomQuestions(shuffled.slice(0, 5));
     setQuizAnswers({});
@@ -181,13 +166,10 @@ const Profile = () => {
   };
 
   const handleQuizAnswer = (questionId, option) => {
-    console.log('Quiz answer selected:', { questionId, option });
     setQuizAnswers((prev) => ({ ...prev, [questionId]: option }));
   };
 
-  const handleQuizSubmit = async (e) => {
-    e.preventDefault();
-    console.log('Submitting quiz, answers:', quizAnswers);
+  const handleQuizSubmit = async () => {
     let correct = 0;
     randomQuestions.forEach((q) => {
       if (quizAnswers[q.id] === q.correctAnswer) correct++;
@@ -195,9 +177,7 @@ const Profile = () => {
     setScore(correct);
     setQuizSubmitted(true);
 
-    // Save score and timestamp to Firestore
     if (auth.currentUser) {
-      console.log('Saving quiz score:', correct);
       const userRef = doc(db, 'users', auth.currentUser.uid);
       const updateData = {
         quizScore: correct,
@@ -209,202 +189,116 @@ const Profile = () => {
   };
 
   const handleRetakeQuiz = () => {
-    console.log('Retaking quiz');
     setQuizAnswers({});
     setQuizSubmitted(false);
     setScore(null);
     setRandomQuestions([]);
     setShowQuiz(false);
-    setTimeout(() => handleShowQuiz(), 100); // Reopen quiz with new questions
+    setTimeout(() => handleShowQuiz(), 100);
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100">
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-xl text-gray-600"
-        >
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-xl text-gray-600">
           Loading...
         </motion.p>
       </div>
     );
   }
 
-  if (!profile) {
-    return null; // Redirect handled by useEffect
-  }
+  if (!profile) return null;
 
   return (
-    <section className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-100 to-green-100 px-4 sm:px-6 py-10">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-white">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
-        className="max-w-lg w-full bg-white rounded-2xl shadow-xl overflow-hidden"
+        className="w-full max-w-2xl bg-white rounded-lg shadow-lg"
       >
-        <div className="bg-gradient-to-r from-blue-600 to-green-600 p-6">
-          <h2 className="text-3xl font-bold text-white">Your Profile</h2>
+        {/* Tabs */}
+        <div className="flex border-b">
+          <button className="px-4 py-2 text-blue-600 border-b-2 border-blue-600">Profile</button>
+          
         </div>
-        <div className="p-6 sm:p-8 space-y-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.05 }}
-            className="flex items-center space-x-3"
-          >
-            <CheckCircle className="w-6 h-6 text-green-500" />
+
+        {/* Profile Information */}
+        <div className="p-6 space-y-4">
+          <h2 className="text-xl font-bold text-gray-800">Profile Information</h2>
+          <p className="text-gray-600">Manage your personal info</p>
+          <div className="flex items-center space-x-4">
+            
             <div>
-              <label className="text-sm font-medium text-gray-600">Status</label>
-              <p className="text-lg font-semibold text-gray-900">Verified User</p>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="flex items-center space-x-3"
-          >
-            <User className="w-6 h-6 text-blue-600" />
-            <div>
-              <label className="text-sm font-medium text-gray-600">Name</label>
               <p className="text-lg font-semibold text-gray-900">{profile.name}</p>
+              <p className="text-gray-600">{profile.email}</p>
             </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center space-x-3"
-          >
-            <Mail className="w-6 h-6 text-blue-600" />
-            <div>
-              <label className="text-sm font-medium text-gray-600">Email</label>
-              <p className="text-lg font-semibold text-gray-900">{profile.email}</p>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="flex items-center space-x-3"
-          >
-            <Award className="w-6 h-6 text-blue-600" />
-            <div>
-              <label className="text-sm font-medium text-gray-600">Role</label>
-              <span
-                className={`inline-block px-3 py-1 text-sm font-semibold rounded-full ${
-                  profile.role === 'mentor'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-blue-100 text-blue-800'
-                }`}
-              >
-                {profile.role
-                  ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
-                  : 'Student'}
-              </span>
-            </div>
-          </motion.div>
-          {profile.bio && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="flex items-start space-x-3"
-            >
-              <Info className="w-6 h-6 text-blue-600" />
-              <div>
-                <label className="text-sm font-medium text-gray-600">Bio</label>
-                <p className="text-lg text-gray-900">{profile.bio}</p>
-              </div>
-            </motion.div>
-          )}
-          {profile.location && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="flex items-center space-x-3"
-            >
-              <MapPin className="w-6 h-6 text-blue-600" />
-              <div>
-                <label className="text-sm font-medium text-gray-600">Location</label>
-                <p className="text-lg text-gray-900">{profile.location}</p>
-              </div>
-            </motion.div>
-          )}
-          {profile.role === 'mentor' && profile.skill && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="flex items-start space-x-3"
-            >
-              <Code className="w-6 h-6 text-blue-600" />
-              <div>
-                <label className="text-sm font-medium text-gray-600">Skill</label>
-                <span className="px-3 py-1 text-sm font-semibold text-blue-800 bg-blue-100 rounded-full">
-                  {profile.skill}
-                </span>
-              </div>
-            </motion.div>
-          )}
-          {profile.role === 'mentor' && profile.quizScore !== null && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7 }}
-              className="flex items-center space-x-3"
-            >
-              <Award className="w-6 h-6 text-yellow-500" />
-              <div>
-                <label className="text-sm font-medium text-gray-600">{profile.skill} Quiz Score</label>
-                <p className="text-lg text-gray-900">{profile.quizScore}/5</p>
+          </div>
+          <ul className="space-y-3">
+            <li className="flex items-center space-x-2">
+              <User className="w-5 h-5 text-gray-500" />
+              <span className="text-gray-600">Member since:</span>
+              <span className="text-gray-900">{new Date().toLocaleDateString()}</span>
+            </li>
+            <li className="flex items-center space-x-2">
+              <Info className="w-5 h-5 text-gray-500" />
+              <span className="text-gray-600">Bio:</span>
+              <span className="text-gray-900">{profile.bio || 'No bio provided'}</span>
+            </li>
+            {profile.role === 'mentor' && profile.skill && (
+              <li className="flex items-center space-x-2">
+                <Code className="w-5 h-5 text-gray-500" />
+                <span className="text-gray-600">Skill:</span>
+                <span className="text-gray-900">{profile.skill}</span>
+              </li>
+            )}
+            {profile.role === 'mentor' && profile.quizScore !== null && (
+              <li className="flex items-center space-x-2">
+                <Award className="w-5 h-5 text-gray-500" />
+                <span className="text-gray-600">Quiz Score:</span>
+                <span className="text-gray-900">{profile.quizScore}/5</span>
                 {profile.quizLastTaken && (
-                  <p className="text-sm text-gray-600">
-                    Last Taken: {new Date(profile.quizLastTaken).toLocaleDateString()}
-                  </p>
+                  <span className="text-gray-600 text-sm ml-2">({new Date(profile.quizLastTaken).toLocaleDateString()})</span>
                 )}
-              </div>
-            </motion.div>
-          )}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8 }}
-            className="flex justify-end space-x-4"
-          >
+              </li>
+            )}
+            <li className="flex items-center space-x-2">
+              <Mail className="w-5 h-5 text-gray-500" />
+              <span className="text-gray-600">Account Status:</span>
+              <span className="text-gray-900">Verified</span>
+            </li>
+            
+          </ul>
+
+          {/* Buttons */}
+          <div className="flex justify-end space-x-3 mt-6">
             <button
               onClick={() => navigate('/profile-setup')}
-              className="bg-blue-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition-transform transform hover:scale-105"
+              className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
             >
               Edit Profile
             </button>
             <button
               onClick={() => navigate('/notes')}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition-transform transform hover:scale-105"
+              className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
             >
-              <FileText className="w-5 h-5" />
-              <span>Notes</span>
+              Notes
             </button>
             <button
               onClick={handleLogout}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition-transform transform hover:scale-105"
+              className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
             >
-              <LogOut className="w-5 h-5" />
-              <span>Logout</span>
+              Logout
             </button>
             {profile.role === 'mentor' && (
               <button
                 onClick={handleShowQuiz}
-                className="flex items-center space-x-2 bg-green-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:bg-green-700 transition-transform transform hover:scale-105"
+                className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
               >
-                <Brain className="w-5 h-5" />
-                <span>{showQuiz ? 'Hide Quiz' : `Take ${profile.skill} Quiz`}</span>
+                {showQuiz ? 'Hide Quiz' : `Take ${profile.skill} Quiz`}
               </button>
             )}
-          </motion.div>
+          </div>
 
           {/* Quiz Section */}
           {profile.role === 'mentor' && (
@@ -415,16 +309,14 @@ const Profile = () => {
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
                   transition={{ duration: 0.3 }}
-                  className="space-y-6 overflow-hidden mt-6"
+                  className="mt-6 space-y-4"
                 >
-                  <h3 className="text-xl font-semibold text-gray-800">{profile.skill} Quiz</h3>
-                  <p className="text-gray-600 mb-4">
-                    Answer these 5 random questions to test your {profile.skill} skills. Your score will be saved to your profile.
-                  </p>
-                  <form onSubmit={handleQuizSubmit} className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-800">{profile.skill} Quiz</h3>
+                  <p className="text-gray-600">Answer these 5 random questions to test your {profile.skill} skills.</p>
+                  <div className="space-y-4">
                     {randomQuestions.map((q) => (
                       <div key={q.id} className="space-y-2">
-                        <p className="text-gray-800 font-medium">{q.question}</p>
+                        <p className="text-gray-800">{q.question}</p>
                         {q.options.map((option) => (
                           <label key={option} className="flex items-center space-x-2">
                             <input
@@ -436,16 +328,13 @@ const Profile = () => {
                               disabled={quizSubmitted}
                               className="text-blue-600 focus:ring-blue-500"
                             />
-                            <span className="text-gray-600">{option}</span>
-                            {quizSubmitted && (
-                              <>
-                                {quizAnswers[q.id] === option[0] && quizAnswers[q.id] === q.correctAnswer && (
-                                  <CheckCircle className="w-5 h-5 text-green-500" />
-                                )}
-                                {quizAnswers[q.id] === option[0] && quizAnswers[q.id] !== q.correctAnswer && (
-                                  <XCircle className="w-5 h-5 text-red-500" />
-                                )}
-                              </>
+                            <span className="text-gray-700">{option}</span>
+                            {quizSubmitted && quizAnswers[q.id] === option[0] && (
+                              quizAnswers[q.id] === q.correctAnswer ? (
+                                <CheckCircle className="w-5 h-5 text-green-500" />
+                              ) : (
+                                <XCircle className="w-5 h-5 text-red-500" />
+                              )
                             )}
                           </label>
                         ))}
@@ -453,34 +342,27 @@ const Profile = () => {
                     ))}
                     <div className="flex justify-end space-x-4">
                       <button
-                        type="submit"
+                        onClick={handleQuizSubmit}
                         disabled={quizSubmitted || Object.keys(quizAnswers).length < randomQuestions.length}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
+                        className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 disabled:bg-gray-400 transition"
                       >
                         {quizSubmitted ? 'Submitted' : 'Submit Quiz'}
                       </button>
                       {quizSubmitted && (
                         <button
-                          type="button"
                           onClick={handleRetakeQuiz}
-                          className="bg-green-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-green-700 transition"
+                          className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition"
                         >
                           Retake Quiz
                         </button>
                       )}
                     </div>
-                  </form>
+                  </div>
                   {quizSubmitted && (
-                    <div className="mt-4 p-4 bg-blue-50 rounded-md">
-                      <p className="text-gray-800 font-medium">
-                        Your Score: {score} out of {randomQuestions.length}
-                      </p>
+                    <div className="p-4 bg-blue-50 rounded-md">
+                      <p className="text-gray-800 font-medium">Your Score: {score}/5</p>
                       <p className="text-gray-600">
-                        {score === randomQuestions.length
-                          ? `Perfect! You’re a ${profile.skill} pro!`
-                          : score >= randomQuestions.length / 2
-                          ? `Nice work! Review incorrect answers to level up your ${profile.skill} skills.`
-                          : `Keep learning ${profile.skill}! Check the resources in Website Dev.`}
+                        {score === 5 ? 'Perfect! You’re a pro!' : score >= 3 ? 'Good job! Review mistakes.' : 'Keep learning!'}
                       </p>
                     </div>
                   )}
@@ -490,7 +372,7 @@ const Profile = () => {
           )}
         </div>
       </motion.div>
-    </section>
+    </div>
   );
 };
 
