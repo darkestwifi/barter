@@ -220,7 +220,6 @@ const Profile = () => {
         {/* Tabs */}
         <div className="flex border-b">
           <button className="px-4 py-2 text-blue-600 border-b-2 border-blue-600">Profile</button>
-          
         </div>
 
         {/* Profile Information */}
@@ -228,7 +227,6 @@ const Profile = () => {
           <h2 className="text-xl font-bold text-gray-800">Profile Information</h2>
           <p className="text-gray-600">Manage your personal info</p>
           <div className="flex items-center space-x-4">
-            
             <div>
               <p className="text-lg font-semibold text-gray-900">{profile.name}</p>
               <p className="text-gray-600">{profile.email}</p>
@@ -245,6 +243,13 @@ const Profile = () => {
               <span className="text-gray-600">Bio:</span>
               <span className="text-gray-900">{profile.bio || 'No bio provided'}</span>
             </li>
+            {profile.role && (
+              <li className="flex items-center space-x-2">
+                <User className="w-5 h-5 text-gray-500" />
+                <span className="text-gray-600">Role:</span>
+                <span className="text-gray-900">{profile.role === 'mentor' ? 'Mentor' : 'Normal User'}</span>
+              </li>
+            )}
             {profile.role === 'mentor' && profile.skill && (
               <li className="flex items-center space-x-2">
                 <Code className="w-5 h-5 text-gray-500" />
@@ -267,7 +272,6 @@ const Profile = () => {
               <span className="text-gray-600">Account Status:</span>
               <span className="text-gray-900">Verified</span>
             </li>
-            
           </ul>
 
           {/* Buttons */}
