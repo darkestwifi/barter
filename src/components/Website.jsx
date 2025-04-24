@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Code, BookOpen, DollarSign, CheckCircle, XCircle, Brain, ChevronDown, ChevronUp, PlayCircle, Map, FileCode, Palette, Braces, Wrench, Star } from 'lucide-react';
 import { auth, db } from '../firebase';
-import { doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc } from 'firebase/firestore';
+import { doc, getDoc, updateDoc, addDoc, collection, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
@@ -248,37 +248,24 @@ export default defineConfig({});`,
           setPaidMentors(userDoc.data().paidMentors || []);
         }
 
-        // Fetch all users with mentor role
         try {
           setLoadingMentors(true);
           const usersSnapshot = await getDocs(collection(db, 'users'));
-          const mentorList = [];
-          usersSnapshot.forEach((doc) => {
-            const data = doc.data();
-            if (data.role === 'mentor') {
-              mentorList.push({
-                id: doc.id,
-                name: data.name || 'Unnamed Mentor',
-                role: data.role || 'mentor',
-                skill: data.skill || 'General',
-                price: data.price || 50,
-                photo: data.photo || 'https://via.placeholder.com/150',
-                chatId: doc.id,
-                rating: data.rating || 0,
-              });
-            }
-          });
+          const mentorList = usersSnapshot.docs
+            .filter(doc => doc.data().role === 'mentor')
+            .map(doc => ({
+              id: doc.id,
+              name: doc.data().name || 'Unnamed Mentor',
+              skill: Array.isArray(doc.data().skills) ? doc.data().skills.join(', ') : doc.data().skill || 'General',
+              price: doc.data().price || 500,
+              rating: doc.data().rating || 0,
+            }));
           setMentors(mentorList);
 
-          // Fetch reviews for each mentor
           const reviewsData = {};
           for (const mentor of mentorList) {
             const reviewsSnapshot = await getDocs(collection(db, 'users', mentor.id, 'reviews'));
-            const mentorReviews = [];
-            reviewsSnapshot.forEach((doc) => {
-              mentorReviews.push({ id: doc.id, ...doc.data() });
-            });
-            reviewsData[mentor.id] = mentorReviews;
+            reviewsData[mentor.id] = reviewsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
           }
           setReviews(reviewsData);
           setMentorError(null);
@@ -374,39 +361,39 @@ export default defineConfig({});`,
   };
 
   return (
-    <section className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 px-4 sm:px-6 py-10">
+    <section className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 px-2 sm:px-4 py-6 sm:py-10">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className="max-w-6xl mx-auto"
       >
-        <h1 className="text-3xl mt-12 sm:text-4xl font-bold text-blue-600 mb-8 text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold text-blue-600 mb-6 sm:mb-8 text-center">
           Website Development Hub
         </h1>
 
-        <div className="flex justify-center mb-8">
-          <div className="flex space-x-4 bg-white rounded-full shadow-md p-2">
+        <div className="flex justify-center mb-6 sm:mb-8">
+          <div className="flex space-x-3 bg-white rounded-full shadow-md p-2">
             <button
               onClick={() => handleTabChange('free')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-full text-base font-semibold transition-colors ${
+              className={`flex items-center space-x-1 px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base font-semibold transition-colors ${
                 activeTab === 'free'
                   ? 'bg-blue-600 text-white'
                   : 'bg-transparent text-gray-600 hover:bg-blue-100'
               }`}
             >
-              <BookOpen className="w-5 h-5" />
+              <BookOpen className="w-4 sm:w-5 h-4 sm:h-5" />
               <span>Free Resources</span>
             </button>
             <button
               onClick={() => handleTabChange('paid')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-full text-base font-semibold transition-colors ${
+              className={`flex items-center space-x-1 px-4 sm:px-6 py-2 rounded-full text-sm sm:text-base font-semibold transition-colors ${
                 activeTab === 'paid'
                   ? 'bg-green-600 text-white'
                   : 'bg-transparent text-gray-600 hover:bg-green-100'
               }`}
             >
-              <DollarSign className="w-5 h-5" />
+              <DollarSign className="w-4 sm:w-5 h-4 sm:h-5" />
               <span>Paid Courses</span>
             </button>
           </div>
@@ -417,26 +404,26 @@ export default defineConfig({});`,
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.3 }}
-          className="bg-white rounded-xl shadow-lg p-6 sm:p-8"
+          className="bg-white rounded-xl shadow-lg p-4 sm:p-6"
         >
           {activeTab === 'free' ? (
-            <div className="space-y-8">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center space-x-2">
-                <Code className="w-6 h-6 text-blue-600" />
+            <div className="space-y-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center space-x-2">
+                <Code className="w-5 sm:w-6 h-5 sm:h-6 text-blue-600" />
                 <span>Learn Web Development</span>
               </h2>
-              <p className="text-gray-600">
+              <p className="text-gray-600 text-sm sm:text-base">
                 Master web development with our comprehensive resources, roadmaps, tutorials, and quizzes.
               </p>
 
               <div>
                 <h3
-                  className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
+                  className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center space-x-2 cursor-pointer"
                   onClick={() => toggleSection('html')}
                 >
-                  <FileCode className="w-6 h-6 text-blue-600" />
+                  <FileCode className="w-5 sm:w-6 h-5 sm:h-6 text-blue-600" />
                   <span>HTML: The Foundation</span>
-                  {expandedSection === 'html' ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  {expandedSection === 'html' ? <ChevronUp className="w-4 sm:w-5 h-4 sm:h-5" /> : <ChevronDown className="w-4 sm:w-5 h-4 sm:h-5" />}
                 </h3>
                 <AnimatePresence>
                   {expandedSection === 'html' && (
@@ -445,33 +432,33 @@ export default defineConfig({});`,
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="space-y-6 overflow-hidden"
+                      className="space-y-4 sm:space-y-6 overflow-hidden"
                     >
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">{htmlContent.overview.title}</h4>
-                        <p className="text-gray-600">{htmlContent.overview.description}</p>
-                        <ul className="list-disc list-inside text-gray-600 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">{htmlContent.overview.title}</h4>
+                        <p className="text-gray-600 text-sm sm:text-base">{htmlContent.overview.description}</p>
+                        <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                           {htmlContent.overview.keyPoints.map((point, idx) => (
                             <li key={idx}>{point}</li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
-                          <Map className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center space-x-2">
+                          <Map className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
                           <span>HTML Learning Roadmap</span>
                         </h4>
-                        <div className="grid gap-4 mt-2">
+                        <div className="grid gap-3 sm:gap-4 mt-2">
                           {htmlContent.roadmap.map((step, idx) => (
-                            <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                              <h5 className="text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
-                              <p className="text-gray-600">{step.description}</p>
-                              <ul className="list-disc list-inside text-gray-600 mt-2">
+                            <div key={idx} className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <h5 className="text-sm sm:text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
+                              <p className="text-gray-600 text-sm sm:text-base">{step.description}</p>
+                              <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                                 {step.tasks.map((task, i) => (
                                   <li key={i}>{task}</li>
                                 ))}
                               </ul>
-                              <ul className="list-disc list-inside text-gray-600 mt-2">
+                              <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                                 {step.resources.map((res, i) => (
                                   <li key={i}>
                                     <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -485,16 +472,16 @@ export default defineConfig({});`,
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
-                          <PlayCircle className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center space-x-2">
+                          <PlayCircle className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
                           <span>Tutorials & Resources</span>
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
                           {htmlContent.tutorials.map((tutorial, idx) => (
-                            <div key={idx} className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                              <p className="text-gray-800 font-medium">{tutorial.title}</p>
-                              <p className="text-gray-600 text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
-                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            <div key={idx} className="p-2 sm:p-3 bg-gray-50 rounded-md border border-gray-200">
+                              <p className="text-gray-800 font-medium text-sm sm:text-base">{tutorial.title}</p>
+                              <p className="text-gray-600 text-xs sm:text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
+                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm sm:text-base">
                                 Start Learning
                               </a>
                             </div>
@@ -502,20 +489,20 @@ export default defineConfig({});`,
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">Tips & Tricks</h4>
-                        <ul className="list-disc list-inside text-gray-600 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">Tips & Tricks</h4>
+                        <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                           {htmlContent.tips.map((tip, idx) => (
                             <li key={idx}>{tip}</li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">Code Snippets</h4>
-                        <div className="space-y-4 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">Code Snippets</h4>
+                        <div className="space-y-3 sm:space-y-4 mt-2">
                           {htmlContent.codeSnippets.map((snippet, idx) => (
-                            <div key={idx} className="bg-gray-800 text-white p-4 rounded-md">
-                              <p className="font-medium text-gray-300">{snippet.title}</p>
-                              <pre className="text-sm overflow-x-auto">
+                            <div key={idx} className="bg-gray-800 text-white p-3 sm:p-4 rounded-md">
+                              <p className="font-medium text-gray-300 text-sm sm:text-base">{snippet.title}</p>
+                              <pre className="text-xs sm:text-sm overflow-x-auto">
                                 <code>{snippet.code}</code>
                               </pre>
                             </div>
@@ -529,12 +516,12 @@ export default defineConfig({});`,
 
               <div>
                 <h3
-                  className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
+                  className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center space-x-2 cursor-pointer"
                   onClick={() => toggleSection('css')}
                 >
-                  <Palette className="w-6 h-6 text-blue-600" />
+                  <Palette className="w-5 sm:w-6 h-5 sm:h-6 text-blue-600" />
                   <span>CSS: Styling the Web</span>
-                  {expandedSection === 'css' ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  {expandedSection === 'css' ? <ChevronUp className="w-4 sm:w-5 h-4 sm:h-5" /> : <ChevronDown className="w-4 sm:w-5 h-4 sm:h-5" />}
                 </h3>
                 <AnimatePresence>
                   {expandedSection === 'css' && (
@@ -543,33 +530,33 @@ export default defineConfig({});`,
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="space-y-6 overflow-hidden"
+                      className="space-y-4 sm:space-y-6 overflow-hidden"
                     >
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">{cssContent.overview.title}</h4>
-                        <p className="text-gray-600">{cssContent.overview.description}</p>
-                        <ul className="list-disc list-inside text-gray-600 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">{cssContent.overview.title}</h4>
+                        <p className="text-gray-600 text-sm sm:text-base">{cssContent.overview.description}</p>
+                        <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                           {cssContent.overview.keyPoints.map((point, idx) => (
                             <li key={idx}>{point}</li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
-                          <Map className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center space-x-2">
+                          <Map className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
                           <span>CSS Learning Roadmap</span>
                         </h4>
-                        <div className="grid gap-4 mt-2">
+                        <div className="grid gap-3 sm:gap-4 mt-2">
                           {cssContent.roadmap.map((step, idx) => (
-                            <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                              <h5 className="text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
-                              <p className="text-gray-600">{step.description}</p>
-                              <ul className="list-disc list-inside text-gray-600 mt-2">
+                            <div key={idx} className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <h5 className="text-sm sm:text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
+                              <p className="text-gray-600 text-sm sm:text-base">{step.description}</p>
+                              <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                                 {step.tasks.map((task, i) => (
                                   <li key={i}>{task}</li>
                                 ))}
                               </ul>
-                              <ul className="list-disc list-inside text-gray-600 mt-2">
+                              <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                                 {step.resources.map((res, i) => (
                                   <li key={i}>
                                     <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -583,16 +570,16 @@ export default defineConfig({});`,
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
-                          <PlayCircle className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center space-x-2">
+                          <PlayCircle className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
                           <span>Tutorials & Resources</span>
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
                           {cssContent.tutorials.map((tutorial, idx) => (
-                            <div key={idx} className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                              <p className="text-gray-800 font-medium">{tutorial.title}</p>
-                              <p className="text-gray-600 text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
-                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            <div key={idx} className="p-2 sm:p-3 bg-gray-50 rounded-md border border-gray-200">
+                              <p className="text-gray-800 font-medium text-sm sm:text-base">{tutorial.title}</p>
+                              <p className="text-gray-600 text-xs sm:text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
+                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm sm:text-base">
                                 Start Learning
                               </a>
                             </div>
@@ -600,20 +587,20 @@ export default defineConfig({});`,
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">Tips & Tricks</h4>
-                        <ul className="list-disc list-inside text-gray-600 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">Tips & Tricks</h4>
+                        <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                           {cssContent.tips.map((tip, idx) => (
                             <li key={idx}>{tip}</li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">Code Snippets</h4>
-                        <div className="space-y-4 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">Code Snippets</h4>
+                        <div className="space-y-3 sm:space-y-4 mt-2">
                           {cssContent.codeSnippets.map((snippet, idx) => (
-                            <div key={idx} className="bg-gray-800 text-white p-4 rounded-md">
-                              <p className="font-medium text-gray-300">{snippet.title}</p>
-                              <pre className="text-sm overflow-x-auto">
+                            <div key={idx} className="bg-gray-800 text-white p-3 sm:p-4 rounded-md">
+                              <p className="font-medium text-gray-300 text-sm sm:text-base">{snippet.title}</p>
+                              <pre className="text-xs sm:text-sm overflow-x-auto">
                                 <code>{snippet.code}</code>
                               </pre>
                             </div>
@@ -627,12 +614,12 @@ export default defineConfig({});`,
 
               <div>
                 <h3
-                  className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
+                  className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center space-x-2 cursor-pointer"
                   onClick={() => toggleSection('js')}
                 >
-                  <Braces className="w-6 h-6 text-blue-600" />
+                  <Braces className="w-5 sm:w-6 h-5 sm:h-6 text-blue-600" />
                   <span>JavaScript: Interactivity</span>
-                  {expandedSection === 'js' ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  {expandedSection === 'js' ? <ChevronUp className="w-4 sm:w-5 h-4 sm:h-5" /> : <ChevronDown className="w-4 sm:w-5 h-4 sm:h-5" />}
                 </h3>
                 <AnimatePresence>
                   {expandedSection === 'js' && (
@@ -641,33 +628,33 @@ export default defineConfig({});`,
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="space-y-6 overflow-hidden"
+                      className="space-y-4 sm:space-y-6 overflow-hidden"
                     >
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">{jsContent.overview.title}</h4>
-                        <p className="text-gray-600">{jsContent.overview.description}</p>
-                        <ul className="list-disc list-inside text-gray-600 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">{jsContent.overview.title}</h4>
+                        <p className="text-gray-600 text-sm sm:text-base">{jsContent.overview.description}</p>
+                        <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                           {jsContent.overview.keyPoints.map((point, idx) => (
                             <li key={idx}>{point}</li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
-                          <Map className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center space-x-2">
+                          <Map className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
                           <span>JavaScript Learning Roadmap</span>
                         </h4>
-                        <div className="grid gap-4 mt-2">
+                        <div className="grid gap-3 sm:gap-4 mt-2">
                           {jsContent.roadmap.map((step, idx) => (
-                            <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                              <h5 className="text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
-                              <p className="text-gray-600">{step.description}</p>
-                              <ul className="list-disc list-inside text-gray-600 mt-2">
+                            <div key={idx} className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <h5 className="text-sm sm:text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
+                              <p className="text-gray-600 text-sm sm:text-base">{step.description}</p>
+                              <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                                 {step.tasks.map((task, i) => (
                                   <li key={i}>{task}</li>
                                 ))}
                               </ul>
-                              <ul className="list-disc list-inside text-gray-600 mt-2">
+                              <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                                 {step.resources.map((res, i) => (
                                   <li key={i}>
                                     <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -681,16 +668,16 @@ export default defineConfig({});`,
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
-                          <PlayCircle className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center space-x-2">
+                          <PlayCircle className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
                           <span>Tutorials & Resources</span>
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
                           {jsContent.tutorials.map((tutorial, idx) => (
-                            <div key={idx} className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                              <p className="text-gray-800 font-medium">{tutorial.title}</p>
-                              <p className="text-gray-600 text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
-                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            <div key={idx} className="p-2 sm:p-3 bg-gray-50 rounded-md border border-gray-200">
+                              <p className="text-gray-800 font-medium text-sm sm:text-base">{tutorial.title}</p>
+                              <p className="text-gray-600 text-xs sm:text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
+                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm sm:text-base">
                                 Start Learning
                               </a>
                             </div>
@@ -698,20 +685,20 @@ export default defineConfig({});`,
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">Tips & Tricks</h4>
-                        <ul className="list-disc list-inside text-gray-600 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">Tips & Tricks</h4>
+                        <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                           {jsContent.tips.map((tip, idx) => (
                             <li key={idx}>{tip}</li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">Code Snippets</h4>
-                        <div className="space-y-4 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">Code Snippets</h4>
+                        <div className="space-y-3 sm:space-y-4 mt-2">
                           {jsContent.codeSnippets.map((snippet, idx) => (
-                            <div key={idx} className="bg-gray-800 text-white p-4 rounded-md">
-                              <p className="font-medium text-gray-300">{snippet.title}</p>
-                              <pre className="text-sm overflow-x-auto">
+                            <div key={idx} className="bg-gray-800 text-white p-3 sm:p-4 rounded-md">
+                              <p className="font-medium text-gray-300 text-sm sm:text-base">{snippet.title}</p>
+                              <pre className="text-xs sm:text-sm overflow-x-auto">
                                 <code>{snippet.code}</code>
                               </pre>
                             </div>
@@ -725,12 +712,12 @@ export default defineConfig({});`,
 
               <div>
                 <h3
-                  className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
+                  className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center space-x-2 cursor-pointer"
                   onClick={() => toggleSection('tools')}
                 >
-                  <Wrench className="w-6 h-6 text-blue-600" />
+                  <Wrench className="w-5 sm:w-6 h-5 sm:h-6 text-blue-600" />
                   <span>Tools & Frameworks</span>
-                  {expandedSection === 'tools' ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  {expandedSection === 'tools' ? <ChevronUp className="w-4 sm:w-5 h-4 sm:h-5" /> : <ChevronDown className="w-4 sm:w-5 h-4 sm:h-5" />}
                 </h3>
                 <AnimatePresence>
                   {expandedSection === 'tools' && (
@@ -739,33 +726,33 @@ export default defineConfig({});`,
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="space-y-6 overflow-hidden"
+                      className="space-y-4 sm:space-y-6 overflow-hidden"
                     >
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">{toolsContent.overview.title}</h4>
-                        <p className="text-gray-600">{toolsContent.overview.description}</p>
-                        <ul className="list-disc list-inside text-gray-600 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">{toolsContent.overview.title}</h4>
+                        <p className="text-gray-600 text-sm sm:text-base">{toolsContent.overview.description}</p>
+                        <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                           {toolsContent.overview.keyPoints.map((point, idx) => (
                             <li key={idx}>{point}</li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
-                          <Map className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center space-x-2">
+                          <Map className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
                           <span>Tools Learning Roadmap</span>
                         </h4>
-                        <div className="grid gap-4 mt-2">
+                        <div className="grid gap-3 sm:gap-4 mt-2">
                           {toolsContent.roadmap.map((step, idx) => (
-                            <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-                              <h5 className="text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
-                              <p className="text-gray-600">{step.description}</p>
-                              <ul className="list-disc list-inside text-gray-600 mt-2">
+                            <div key={idx} className="p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                              <h5 className="text-sm sm:text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
+                              <p className="text-gray-600 text-sm sm:text-base">{step.description}</p>
+                              <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                                 {step.tasks.map((task, i) => (
                                   <li key={i}>{task}</li>
                                 ))}
                               </ul>
-                              <ul className="list-disc list-inside text-gray-600 mt-2">
+                              <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                                 {step.resources.map((res, i) => (
                                   <li key={i}>
                                     <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -779,16 +766,16 @@ export default defineConfig({});`,
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800 flex items-center space-x-2">
-                          <PlayCircle className="w-5 h-5 text-blue-600" />
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center space-x-2">
+                          <PlayCircle className="w-4 sm:w-5 h-4 sm:h-5 text-blue-600" />
                           <span>Tutorials & Resources</span>
                         </h4>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-2">
                           {toolsContent.tutorials.map((tutorial, idx) => (
-                            <div key={idx} className="p-3 bg-gray-50 rounded-md border border-gray-200">
-                              <p className="text-gray-800 font-medium">{tutorial.title}</p>
-                              <p className="text-gray-600 text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
-                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            <div key={idx} className="p-2 sm:p-3 bg-gray-50 rounded-md border border-gray-200">
+                              <p className="text-gray-800 font-medium text-sm sm:text-base">{tutorial.title}</p>
+                              <p className="text-gray-600 text-xs sm:text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
+                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline text-sm sm:text-base">
                                 Start Learning
                               </a>
                             </div>
@@ -796,20 +783,20 @@ export default defineConfig({});`,
                         </div>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">Tips & Tricks</h4>
-                        <ul className="list-disc list-inside text-gray-600 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">Tips & Tricks</h4>
+                        <ul className="list-disc list-inside text-gray-600 mt-2 text-sm sm:text-base">
                           {toolsContent.tips.map((tip, idx) => (
                             <li key={idx}>{tip}</li>
                           ))}
                         </ul>
                       </div>
                       <div>
-                        <h4 className="text-lg font-semibold text-gray-800">Code Snippets</h4>
-                        <div className="space-y-4 mt-2">
+                        <h4 className="text-base sm:text-lg font-semibold text-gray-800">Code Snippets</h4>
+                        <div className="space-y-3 sm:space-y-4 mt-2">
                           {toolsContent.codeSnippets.map((snippet, idx) => (
-                            <div key={idx} className="bg-gray-800 text-white p-4 rounded-md">
-                              <p className="font-medium text-gray-300">{snippet.title}</p>
-                              <pre className="text-sm overflow-x-auto">
+                            <div key={idx} className="bg-gray-800 text-white p-3 sm:p-4 rounded-md">
+                              <p className="font-medium text-gray-300 text-sm sm:text-base">{snippet.title}</p>
+                              <pre className="text-xs sm:text-sm overflow-x-auto">
                                 <code>{snippet.code}</code>
                               </pre>
                             </div>
@@ -823,12 +810,12 @@ export default defineConfig({});`,
 
               <div>
                 <h3
-                  className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
+                  className="text-lg sm:text-xl font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center space-x-2 cursor-pointer"
                   onClick={() => toggleSection('projects')}
                 >
-                  <Code className="w-6 h-6 text-blue-600" />
+                  <Code className="w-5 sm:w-6 h-5 sm:h-6 text-blue-600" />
                   <span>Project Ideas</span>
-                  {expandedSection === 'projects' ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  {expandedSection === 'projects' ? <ChevronUp className="w-4 sm:w-5 h-4 sm:h-5" /> : <ChevronDown className="w-4 sm:w-5 h-4 sm:h-5" />}
                 </h3>
                 <AnimatePresence>
                   {expandedSection === 'projects' && (
@@ -837,9 +824,9 @@ export default defineConfig({});`,
                       animate={{ opacity: 1, height: 'auto' }}
                       exit={{ opacity: 0, height: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="space-y-6 overflow-hidden"
+                      className="space-y-4 sm:space-y-6 overflow-hidden"
                     >
-                      <ul className="list-disc list-inside text-gray-600 space-y-2">
+                      <ul className="list-disc list-inside text-gray-600 space-y-2 text-sm sm:text-base">
                         <li><strong>Portfolio Website</strong>: Showcase skills with HTML, CSS, React.</li>
                         <li><strong>Todo App</strong>: Interactive app with JavaScript, Firebase.</li>
                         <li><strong>Blog</strong>: Multi-page site with React Router, Tailwind.</li>
@@ -848,7 +835,7 @@ export default defineConfig({});`,
                         <li><strong>Quiz App</strong>: Build a mini-quiz like this page!</li>
                         <li><strong>Chat App</strong>: Real-time messaging with Firebase.</li>
                       </ul>
-                      <p className="text-gray-600">
+                      <p className="text-gray-600 text-sm sm:text-base">
                         Push projects to GitHub to share with the community.
                       </p>
                     </motion.div>
@@ -859,9 +846,9 @@ export default defineConfig({});`,
               <div className="text-center">
                 <button
                   onClick={handleShowQuiz}
-                  className="flex items-center justify-center mx-auto space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition"
+                  className="flex items-center justify-center mx-auto space-x-2 bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold hover:bg-blue-700 transition text-sm sm:text-base"
                 >
-                  <Brain className="w-5 h-5" />
+                  <Brain className="w-4 sm:w-5 h-4 sm:h-5" />
                   <span>Test Your Knowledge</span>
                 </button>
               </div>
@@ -873,14 +860,14 @@ export default defineConfig({});`,
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
                     transition={{ duration: 0.3 }}
-                    className="mt-6 space-y-4"
+                    className="mt-4 sm:mt-6 space-y-4"
                   >
-                    <h3 className="text-xl font-semibold text-gray-800">Web Development Quiz</h3>
-                    <p className="text-gray-600">Test your skills with 5 random questions.</p>
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-800">Web Development Quiz</h3>
+                    <p className="text-gray-600 text-sm sm:text-base">Test your skills with 5 random questions.</p>
                     <form onSubmit={handleQuizSubmit} className="space-y-4">
                       {randomQuestions.map((q) => (
                         <div key={q.id} className="space-y-2">
-                          <p className="text-gray-800">{q.question}</p>
+                          <p className="text-gray-800 text-sm sm:text-base">{q.question}</p>
                           {q.options.map((option) => (
                             <label key={option} className="flex items-center space-x-2">
                               <input
@@ -892,32 +879,32 @@ export default defineConfig({});`,
                                 disabled={quizSubmitted}
                                 className="text-blue-600 focus:ring-blue-500"
                               />
-                              <span className="text-gray-700">{option}</span>
+                              <span className="text-gray-700 text-sm sm:text-base">{option}</span>
                               {quizSubmitted && quizAnswers[q.id] === option[0] && (
                                 quizAnswers[q.id] === q.correctAnswer ? (
-                                  <CheckCircle className="w-5 h-5 text-green-500" />
+                                  <CheckCircle className="w-4 sm:w-5 h-4 sm:h-5 text-green-500" />
                                 ) : (
-                                  <XCircle className="w-5 h-5 text-red-500" />
+                                  <XCircle className="w-4 sm:w-5 h-4 sm:h-5 text-red-500" />
                                 )
                               )}
                             </label>
                           ))}
                         </div>
                       ))}
-                      <div className="flex justify-end space-x-4">
+                      <div className="flex justify-end space-x-3 sm:space-x-4">
                         <button
                           type="submit"
                           disabled={quizSubmitted || Object.keys(quizAnswers).length < randomQuestions.length}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 disabled:bg-gray-400 transition"
+                          className="bg-blue-600 text-white px-3 sm:px-4 py-1 sm:py-2 rounded-full hover:bg-blue-700 disabled:bg-gray-400 transition text-sm sm:text-base"
                         >
                           {quizSubmitted ? 'Submitted' : 'Submit Quiz'}
                         </button>
                       </div>
                     </form>
                     {quizSubmitted && (
-                      <div className="p-4 bg-blue-50 rounded-md">
-                        <p className="text-gray-800 font-medium">Your Score: {score}/5</p>
-                        <p className="text-gray-600">
+                      <div className="p-3 sm:p-4 bg-blue-50 rounded-md">
+                        <p className="text-gray-800 font-medium text-sm sm:text-base">Your Score: {score}/5</p>
+                        <p className="text-gray-600 text-sm sm:text-base">
                           {score === 5 ? 'Perfect! You’re a pro!' : score >= 3 ? 'Good job! Review mistakes.' : 'Keep learning!'}
                         </p>
                       </div>
@@ -927,66 +914,61 @@ export default defineConfig({});`,
               </AnimatePresence>
             </div>
           ) : (
-            <div className="space-y-8">
-              <h2 className="text-2xl font-bold text-gray-800 flex items-center space-x-2">
-                <DollarSign className="w-6 h-6 text-green-600" />
+            <div className="space-y-6">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center space-x-2">
+                <DollarSign className="w-5 sm:w-6 h-5 sm:h-6 text-green-600" />
                 <span>Paid Mentorship Programs</span>
               </h2>
-              <p className="text-gray-600">
-                Connect with experienced mentors for personalized guidance and advanced learning.
+              <p className="text-gray-600 text-sm sm:text-base">
+                Connect with experienced mentors for personalized guidance.
               </p>
               {loadingMentors ? (
-                <p className="text-gray-600 text-center">Loading mentors...</p>
+                <p className="text-gray-600 text-center text-sm sm:text-base">Loading mentors...</p>
               ) : mentorError ? (
-                <p className="text-red-500 text-center">{mentorError}</p>
+                <p className="text-red-500 text-center text-sm sm:text-base">{mentorError}</p>
               ) : mentors.length === 0 ? (
-                <p className="text-gray-600 text-center">No mentors available at the moment.</p>
+                <p className="text-gray-600 text-center text-sm sm:text-base">No mentors available at the moment.</p>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {mentors.map((mentor) => (
                     <motion.div
                       key={mentor.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3 }}
-                      className="bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition"
+                      className="bg-gray-50 rounded-lg p-3 sm:p-4 border border-gray-200 shadow-sm hover:shadow-md transition"
                     >
-                      <img
-                        src={mentor.photo}
-                        alt={`${mentor.name}'s profile`}
-                        className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
-                      />
-                      <h3 className="text-lg font-semibold text-gray-800 text-center">
-                        {mentor.name} ({mentor.role === 'mentor' ? 'Mentor' : 'Normal User'})
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 text-center">
+                        {mentor.name}
                       </h3>
-                      <p className="text-gray-600 text-center">Skill: {mentor.skill}</p>
-                      <p className="text-gray-600 text-center">Price: ${mentor.price}/hour</p>
-                      <div className="flex items-center justify-center space-x-1 mt-2">
-                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                        <span className="text-gray-700">{mentor.rating.toFixed(1)}/5</span>
+                      <p className="text-gray-600 text-center text-xs sm:text-sm">Skill: {mentor.skill}</p>
+                      <p className="text-gray-600 text-center text-xs sm:text-sm">Price:  ₹{mentor.price}/hr</p>
+                      <div className="flex items-center justify-center space-x-1 mt-1 sm:mt-2">
+                        <Star className="w-3 sm:w-4 h-3 sm:h-4 text-yellow-400 fill-current" />
+                        <span className="text-gray-700 text-xs sm:text-sm">{mentor.rating.toFixed(1)}/5</span>
                       </div>
-                      <div className="mt-4 flex flex-col space-y-2">
+                      <div className="mt-2 flex flex-col space-y-1 sm:space-y-2">
                         <button
                           onClick={() => handleEnroll(mentor.id)}
                           disabled={paidMentors.includes(mentor.id)}
-                          className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 disabled:bg-gray-400 transition"
+                          className="bg-green-600 text-white px-3 sm:px-4 py-1 rounded-full hover:bg-green-700 disabled:bg-gray-400 transition text-xs sm:text-sm"
                         >
                           {paidMentors.includes(mentor.id) ? 'Enrolled' : 'Enroll Now'}
                         </button>
                         <button
-                          onClick={() => canChat(mentor.id) ? navigate(`/chat/${mentor.chatId}`) : null}
+                          onClick={() => canChat(mentor.id) ? navigate(`/chat/${mentor.id}`) : null}
                           disabled={!canChat(mentor.id)}
-                          className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 disabled:bg-gray-400 transition"
+                          className="bg-blue-600 text-white px-3 sm:px-4 py-1 rounded-full hover:bg-blue-700 disabled:bg-gray-400 transition text-xs sm:text-sm"
                         >
                           {canChat(mentor.id) ? 'Chat Now' : 'Enroll to Chat'}
                         </button>
                       </div>
-                      <div className="mt-4">
-                        <h4 className="text-md font-semibold text-gray-800">Reviews</h4>
+                      <div className="mt-2 sm:mt-3">
+                        <h4 className="text-sm sm:text-md font-semibold text-gray-800">Reviews</h4>
                         {reviews[mentor.id] && reviews[mentor.id].length > 0 ? (
-                          <ul className="space-y-2 mt-2">
+                          <ul className="space-y-1 mt-1 sm:mt-2">
                             {reviews[mentor.id].slice(0, 2).map((review) => (
-                              <li key={review.id} className="text-gray-600 text-sm">
+                              <li key={review.id} className="text-gray-600 text-xs sm:text-sm">
                                 {review.userName}: {review.review}
                               </li>
                             ))}
@@ -1000,17 +982,17 @@ export default defineConfig({});`,
                             )}
                           </ul>
                         ) : (
-                          <p className="text-gray-600 text-sm">No reviews yet.</p>
+                          <p className="text-gray-600 text-xs sm:text-sm">No reviews yet.</p>
                         )}
                         <textarea
                           value={newReview[mentor.id] || ''}
                           onChange={(e) => setNewReview({ ...newReview, [mentor.id]: e.target.value })}
                           placeholder="Write a review..."
-                          className="w-full mt-2 p-2 border border-gray-300 rounded-md text-sm"
+                          className="w-full mt-1 sm:mt-2 p-2 border border-gray-300 rounded-md text-xs sm:text-sm"
                         />
                         <button
                           onClick={() => handleReviewSubmit(mentor.id)}
-                          className="mt-2 bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 text-sm"
+                          className="mt-1 sm:mt-2 bg-blue-600 text-white px-2 sm:px-3 py-1 rounded-full hover:bg-blue-700 text-xs sm:text-sm"
                         >
                           Submit Review
                         </button>
