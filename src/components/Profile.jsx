@@ -113,7 +113,9 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const user = auth.currentUser;
+        console.log('Fetching profile, currentUser:', user);
         if (!user) {
+          console.log('No user, redirecting to /login');
           toast.error('You are not logged in, please log in');
           navigate('/login');
           return;
@@ -123,8 +125,17 @@ const Profile = () => {
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          setProfile(docSnap.data());
+          const profileData = docSnap.data();
+          console.log('Profile data:', profileData);
+          // Ensure role exists, default to 'student' if missing
+          if (!profileData.role) {
+            profileData.role = 'student';
+            await setDoc(docRef, { role: 'student' }, { merge: true });
+            console.log('Set default role to student');
+          }
+          setProfile(profileData);
         } else {
+          console.log('Profile not found, redirecting to /profile-setup');
           toast.error('Profile not found');
           navigate('/profile-setup');
         }
@@ -142,7 +153,9 @@ const Profile = () => {
   // Handle logout
   const handleLogout = async () => {
     try {
+      console.log('Attempting logout');
       await signOut(auth);
+      console.log('Logout successful');
       toast.success('Logged out successfully');
       navigate('/login');
     } catch (error) {
@@ -154,9 +167,11 @@ const Profile = () => {
   // Select 5 random quiz questions for the mentor's skill
   const handleShowQuiz = () => {
     if (!profile?.skill || !quizQuestions[profile.skill]) {
+      console.log('No quiz available for skill:', profile?.skill);
       toast.error('No quiz available for this skill');
       return;
     }
+    console.log('Showing quiz for skill:', profile.skill);
     const shuffled = [...quizQuestions[profile.skill]].sort(() => Math.random() - 0.5);
     setRandomQuestions(shuffled.slice(0, 5));
     setQuizAnswers({});
@@ -166,11 +181,13 @@ const Profile = () => {
   };
 
   const handleQuizAnswer = (questionId, option) => {
+    console.log('Quiz answer selected:', { questionId, option });
     setQuizAnswers((prev) => ({ ...prev, [questionId]: option }));
   };
 
   const handleQuizSubmit = async (e) => {
     e.preventDefault();
+    console.log('Submitting quiz, answers:', quizAnswers);
     let correct = 0;
     randomQuestions.forEach((q) => {
       if (quizAnswers[q.id] === q.correctAnswer) correct++;
@@ -180,6 +197,7 @@ const Profile = () => {
 
     // Save score and timestamp to Firestore
     if (auth.currentUser) {
+      console.log('Saving quiz score:', correct);
       const userRef = doc(db, 'users', auth.currentUser.uid);
       const updateData = {
         quizScore: correct,
@@ -191,6 +209,7 @@ const Profile = () => {
   };
 
   const handleRetakeQuiz = () => {
+    console.log('Retaking quiz');
     setQuizAnswers({});
     setQuizSubmitted(false);
     setScore(null);
@@ -281,7 +300,9 @@ const Profile = () => {
                     : 'bg-blue-100 text-blue-800'
                 }`}
               >
-                {profile.role.charAt(0).toUpperCase() + profile.role.slice(1)}
+                {profile.role
+                  ? profile.role.charAt(0).toUpperCase() + profile.role.slice(1)
+                  : 'Student'}
               </span>
             </div>
           </motion.div>
@@ -352,18 +373,6 @@ const Profile = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.8 }}
-            className="flex items-center space-x-3"
-          >
-            <Shield className="w-6 h-6 text-blue-600" />
-            <div>
-              <label className="text-sm font-medium text-gray-600">User ID</label>
-              <p className="text-lg text-gray-900 truncate">{profile.uid}</p>
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.9 }}
             className="flex justify-end space-x-4"
           >
             <button

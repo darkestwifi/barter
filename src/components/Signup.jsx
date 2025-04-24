@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { User, Mail, Lock, UserPlus } from 'lucide-react';
-import { auth } from '../firebase';
+import { auth, db } from '../firebase';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -14,6 +15,7 @@ const Signup = () => {
     password: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
   const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
 
@@ -21,6 +23,7 @@ const Signup = () => {
   useEffect(() => {
     if (loading) return;
     if (user) {
+      console.log('User already logged in, redirecting to /profile');
       toast.success('Already logged in, redirecting...');
       navigate('/profile');
     }
@@ -28,21 +31,58 @@ const Signup = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    console.log('Input change:', { name, value });
     setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isSubmitting) return;
-    setIsSubmitting(true);
+    if (isSubmitting || isCheckingEmail) return;
+    setIsCheckingEmail(true);
 
     try {
-      await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      // Validate email
+      if (!formData.email || typeof formData.email !== 'string') {
+        console.log('Invalid email:', formData.email);
+        toast.error('Please enter a valid email address');
+        setIsCheckingEmail(false);
+        return;
+      }
+
+      console.log('Checking Firebase email:', formData.email);
+      // Check if email is already registered in Firebase
+      const signInMethods = await fetchSignInMethodsForEmail(auth, formData.email);
+      if (signInMethods.length > 0) {
+        console.log('Email already in use');
+        toast.error('Email already in use');
+        setIsCheckingEmail(false);
+        return;
+      }
+
+      // Proceed with account creation
+      console.log('Creating account...');
+      setIsSubmitting(true);
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const user = userCredential.user;
+
+      // Save user profile to Firestore
+      console.log('Saving user profile to Firestore, uid:', user.uid);
+      await setDoc(doc(db, 'users', user.uid), {
+        name: formData.name,
+        email: formData.email,
+        role: 'student',
+        uid: user.uid,
+        createdAt: new Date().toISOString(),
+      });
+
+      console.log('Account created and profile saved');
       toast.success('Account created successfully!');
       navigate('/profile-setup');
     } catch (err) {
+      console.error('Signup error:', err);
       toast.error(`Failed to sign up: ${err.message}`);
     } finally {
+      setIsCheckingEmail(false);
       setIsSubmitting(false);
     }
   };
@@ -60,7 +100,7 @@ const Signup = () => {
         </h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700">Name</label>
+            <label className="block text-sm font-medium text-gray-600">Name</label>
             <div className="mt-1 relative">
               <User className="absolute top-2.5 left-3 w-4 h-4 text-gray-400" />
               <input
@@ -70,12 +110,12 @@ const Signup = () => {
                 onChange={handleChange}
                 required
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isCheckingEmail}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Email</label>
+            <label className="block text-sm font-medium text-gray-600">Email</label>
             <div className="mt-1 relative">
               <Mail className="absolute top-2.5 left-3 w-4 h-4 text-gray-400" />
               <input
@@ -85,12 +125,12 @@ const Signup = () => {
                 onChange={handleChange}
                 required
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isCheckingEmail}
               />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">Password</label>
+            <label className="block text-sm font-medium text-gray-600">Password</label>
             <div className="mt-1 relative">
               <Lock className="absolute top-2.5 left-3 w-4 h-4 text-gray-400" />
               <input
@@ -100,17 +140,17 @@ const Signup = () => {
                 onChange={handleChange}
                 required
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isCheckingEmail}
               />
             </div>
           </div>
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || isCheckingEmail}
             className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
           >
             <UserPlus className="w-4 h-4" />
-            <span>{isSubmitting ? 'Signing up...' : 'Sign Up'}</span>
+            <span>{isSubmitting || isCheckingEmail ? 'Processing...' : 'Sign Up'}</span>
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-gray-600">
