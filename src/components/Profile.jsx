@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { auth, db } from '../firebase';
+import { signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { User, Mail, MapPin, Info, Code, Shield, Award, Brain, CheckCircle, XCircle, FileText } from 'lucide-react';
+import { User, Mail, MapPin, Info, Code, Shield, Award, Brain, CheckCircle, XCircle, FileText, LogOut } from 'lucide-react';
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
@@ -113,8 +114,8 @@ const Profile = () => {
       try {
         const user = auth.currentUser;
         if (!user) {
-          toast.error('User not authenticated');
-          navigate('/signup');
+          toast.error('You are not logged in, please log in');
+          navigate('/login');
           return;
         }
 
@@ -137,6 +138,18 @@ const Profile = () => {
 
     fetchProfile();
   }, [navigate]);
+
+  // Handle logout
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      toast.success('Logged out successfully');
+      navigate('/login');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      toast.error('Failed to log out');
+    }
+  };
 
   // Select 5 random quiz questions for the mentor's skill
   const handleShowQuiz = () => {
@@ -365,6 +378,13 @@ const Profile = () => {
             >
               <FileText className="w-5 h-5" />
               <span>Notes</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition-transform transform hover:scale-105"
+            >
+              <LogOut className="w-5 h-5" />
+              <span>Logout</span>
             </button>
             {profile.role === 'mentor' && (
               <button

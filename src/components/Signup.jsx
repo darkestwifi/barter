@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import { User, Mail, Lock, UserPlus } from 'lucide-react';
+import { auth } from '../firebase';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -11,7 +13,18 @@ const Signup = () => {
     email: '',
     password: '',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [user, loading] = useAuthState(auth);
   const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (loading) return;
+    if (user) {
+      toast.success('Already logged in, redirecting...');
+      navigate('/profile');
+    }
+  }, [user, loading, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,12 +33,17 @@ const Signup = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
       await createUserWithEmailAndPassword(auth, formData.email, formData.password);
       toast.success('Account created successfully!');
-      navigate('/profile-setup'); // Redirect to ProfileSetup
+      navigate('/profile-setup');
     } catch (err) {
-      toast.error(err.message);
+      toast.error(`Failed to sign up: ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -43,42 +61,56 @@ const Signup = () => {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-sm font-medium text-gray-700">Name</label>
-            <input
-              type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="mt-1 relative">
+              <User className="absolute top-2.5 left-3 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Email</label>
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="mt-1 relative">
+              <Mail className="absolute top-2.5 left-3 w-4 h-4 text-gray-400" />
+              <input
+                type="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">Password</label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            />
+            <div className="mt-1 relative">
+              <Lock className="absolute top-2.5 left-3 w-4 h-4 text-gray-400" />
+              <input
+                type="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+                disabled={isSubmitting}
+              />
+            </div>
           </div>
           <button
             type="submit"
-            className="w-full bg-blue-600 text-white py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition"
+            disabled={isSubmitting}
+            className="w-full flex items-center justify-center space-x-2 bg-blue-600 text-white py-3 rounded-full text-base font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
           >
-            Sign Up
+            <UserPlus className="w-4 h-4" />
+            <span>{isSubmitting ? 'Signing up...' : 'Sign Up'}</span>
           </button>
         </form>
         <p className="mt-6 text-center text-sm text-gray-600">
