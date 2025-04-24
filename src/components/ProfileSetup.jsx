@@ -11,24 +11,19 @@ const ProfileSetup = () => {
     name: '',
     bio: '',
     location: '',
-    skills: [], // For mentors
+    skill: '', // Single skill for mentors
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const handleRoleSelect = (selectedRole) => {
     setRole(selectedRole);
-    setFormData({ name: '', bio: '', location: '', skills: [] });
+    setFormData({ name: '', bio: '', location: '', skill: '' });
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSkillsChange = (e) => {
-    const skills = e.target.value.split(',').map((skill) => skill.trim()).filter((skill) => skill);
-    setFormData((prev) => ({ ...prev, skills }));
   };
 
   const handleSubmit = async (e) => {
@@ -39,6 +34,11 @@ const ProfileSetup = () => {
     try {
       if (!formData.name) {
         toast.error('Name is required');
+        setIsSubmitting(false);
+        return;
+      }
+      if (role === 'mentor' && !formData.skill) {
+        toast.error('Please select a skill');
         setIsSubmitting(false);
         return;
       }
@@ -139,16 +139,21 @@ const ProfileSetup = () => {
             </div>
             {role === 'mentor' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Skills (comma-separated, e.g., React, Python)
-                </label>
-                <input
-                  type="text"
-                  name="skills"
-                  onChange={handleSkillsChange}
+                <label className="block text-sm font-medium text-gray-700">Skill</label>
+                <select
+                  name="skill"
+                  value={formData.skill}
+                  onChange={handleInputChange}
+                  required
                   className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   disabled={isSubmitting}
-                />
+                >
+                  <option value="">Select a skill</option>
+                  <option value="React">React</option>
+                  <option value="Python">Python</option>
+                  <option value="JavaScript">JavaScript</option>
+                  <option value="CSS">CSS</option>
+                </select>
               </div>
             )}
             <div className="flex justify-end gap-4">

@@ -14,6 +14,7 @@ import Chat from './components/Chat';
 import Courses from './components/Courses';
 import Website from './components/Website';
 import ProfileSetup from './components/ProfileSetup';
+import Notes from './components/Notes';
 import { Analytics } from '@vercel/analytics/react';
 
 function App() {
@@ -35,6 +36,7 @@ function App() {
         <Route path="/courses" element={<Courses />} />
         <Route path="/website" element={<Website />} />
         <Route path="/profile-setup" element={<ProfileSetup />} />
+        <Route path="/notes" element={<Notes />} />
       </Routes>
     </Router>
   );
