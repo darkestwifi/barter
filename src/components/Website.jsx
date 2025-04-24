@@ -1,6 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Code, BookOpen, DollarSign, CheckCircle, XCircle, Brain, ChevronDown, ChevronUp, PlayCircle, Map, FileCode, Palette, Braces, Wrench } from 'lucide-react';
+import { Code, BookOpen, DollarSign, CheckCircle, XCircle, Brain, ChevronDown, ChevronUp, PlayCircle, Map, FileCode, Palette, Braces, Wrench, Star } from 'lucide-react';
+import { auth, db } from '../firebase';
+import { doc, getDoc, setDoc, updateDoc, collection, getDocs, addDoc } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 const Website = () => {
   const [activeTab, setActiveTab] = useState('free');
@@ -10,8 +14,15 @@ const Website = () => {
   const [score, setScore] = useState(null);
   const [randomQuestions, setRandomQuestions] = useState([]);
   const [expandedSection, setExpandedSection] = useState(null);
+  const [user, setUser] = useState(null);
+  const [paidMentors, setPaidMentors] = useState([]);
+  const [mentors, setMentors] = useState([]);
+  const [reviews, setReviews] = useState({});
+  const [newReview, setNewReview] = useState({});
+  const [loadingMentors, setLoadingMentors] = useState(true);
+  const [mentorError, setMentorError] = useState(null);
+  const navigate = useNavigate();
 
-  // Quiz question bank (30 questions, balanced across HTML, CSS, JS, tools)
   const quizQuestions = [
     { id: 1, question: 'What does HTML stand for?', options: ['A) HyperText Markup Language', 'B) HighText Machine Language', 'C) HyperTool Multi Language', 'D) HyperText Multi Language'], correctAnswer: 'A' },
     { id: 2, question: 'Which HTML tag defines a paragraph?', options: ['A) <p>', 'B) <div>', 'C) <span>', 'D) <para>'], correctAnswer: 'A' },
@@ -45,11 +56,10 @@ const Website = () => {
     { id: 30, question: 'Which JavaScript method fetches data from an API?', options: ['A) fetch()', 'B) get()', 'C) request()', 'D) query()'], correctAnswer: 'A' },
   ];
 
-  // HTML Section Data
   const htmlContent = {
     overview: {
       title: 'HTML: The Foundation of the Web',
-      description: 'HTML (HyperText Markup Language) is the backbone of every website, defining its structure and content. From simple text to complex forms, HTML organizes elements like headings, paragraphs, images, links, and more to create accessible, semantic, and SEO-friendly pages.',
+      description: 'HTML (HyperText Markup Language) is the backbone of every website, defining its structure and content.',
       keyPoints: [
         'Semantic HTML improves accessibility and SEO.',
         'Forms collect user input (e.g., login, search).',
@@ -72,77 +82,13 @@ const Website = () => {
           { title: 'W3Schools HTML Tutorial', url: 'https://www.w3schools.com/html/' },
         ],
       },
-      {
-        stage: 'Beginner',
-        title: 'Semantic HTML',
-        description: 'Use semantic tags for meaning and accessibility.',
-        tasks: [
-          'Use <header>, <nav>, <main>, <footer>.',
-          'Add ARIA roles for screen readers.',
-          'Validate HTML with W3C Validator.',
-        ],
-        resources: [
-          { title: 'MDN Semantic HTML', url: 'https://developer.mozilla.org/en-US/docs/Glossary/Semantics#semantics_in_html' },
-          { title: 'freeCodeCamp Semantic HTML', url: 'https://www.freecodecamp.org/news/semantic-html5-elements/' },
-        ],
-      },
-      {
-        stage: 'Intermediate',
-        title: 'Forms and Inputs',
-        description: 'Build interactive forms for user input.',
-        tasks: [
-          'Create a login form with <form>, <input>, <button>.',
-          'Use input types: text, email, password, checkbox.',
-          'Add validation with required and pattern.',
-        ],
-        resources: [
-          { title: 'MDN HTML Forms', url: 'https://developer.mozilla.org/en-US/docs/Learn/Forms' },
-          { title: 'W3Schools HTML Forms', url: 'https://www.w3schools.com/html/html_forms.asp' },
-        ],
-      },
-      {
-        stage: 'Intermediate',
-        title: 'HTML5 Features',
-        description: 'Explore modern HTML5 elements and APIs.',
-        tasks: [
-          'Embed videos with <video>, audio with <audio>.',
-          'Use <canvas> for graphics.',
-          'Try Geolocation API (with JS).',
-        ],
-        resources: [
-          { title: 'MDN HTML5', url: 'https://developer.mozilla.org/en-US/docs/Web/Guide/HTML/HTML5' },
-          { title: 'HTML5 Rocks', url: 'https://www.html5rocks.com/' },
-        ],
-      },
-      {
-        stage: 'Advanced',
-        title: 'SEO and Accessibility',
-        description: 'Optimize HTML for search engines and accessibility.',
-        tasks: [
-          'Add meta tags for description, keywords.',
-          'Use alt text, ARIA landmarks.',
-          'Test with WAVE or Lighthouse.',
-        ],
-        resources: [
-          { title: 'Moz SEO Guide', url: 'https://moz.com/learn/seo' },
-          { title: 'WebAIM Accessibility', url: 'https://webaim.org/techniques/' },
-        ],
-      },
     ],
     tutorials: [
       { title: 'HTML in 1 Hour (YouTube)', url: 'https://www.youtube.com/watch?v=ok-plXXHlWw', type: 'Video', duration: '1h' },
-      { title: 'freeCodeCamp HTML Course', url: 'https://www.freecodecamp.org/learn/2022/responsive-web-design/', type: 'Course', duration: '4h' },
-      { title: 'W3Schools HTML Exercises', url: 'https://www.w3schools.com/html/html_exercises.asp', type: 'Interactive', duration: '30m' },
-      { title: 'MDN HTML Reference', url: 'https://developer.mozilla.org/en-US/docs/Web/HTML/Element', type: 'Article', duration: 'Varies' },
     ],
     tips: [
       'Use semantic tags (<article>, <section>) over <div>.',
       'Always include alt text for images.',
-      'Validate HTML (https://validator.w3.org/).',
-      'Use <meta charset="UTF-8"> for special characters.',
-      'Avoid inline CSS; use external files.',
-      'Test forms on multiple devices.',
-      'Use comments (<!-- -->) to organize code.',
     ],
     codeSnippets: [
       {
@@ -151,35 +97,21 @@ const Website = () => {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>My Page</title>
 </head>
 <body>
-  <header>
-    <h1>Welcome</h1>
-  </header>
-  <main>
-    <p>Hello, world!</p>
-  </main>
+  <h1>Welcome</h1>
+  <p>Hello, world!</p>
 </body>
 </html>`,
-      },
-      {
-        title: 'Semantic Form',
-        code: `<form action="/submit" method="POST">
-  <label for="email">Email:</label>
-  <input type="email" id="email" name="email" required>
-  <button type="submit">Submit</button>
-</form>`,
       },
     ],
   };
 
-  // CSS Section Data
   const cssContent = {
     overview: {
       title: 'CSS: Styling the Web',
-      description: 'CSS (Cascading Style Sheets) transforms HTML into visually stunning websites with layouts, colors, fonts, and animations. It enables responsive designs and modern layouts like Flexbox and Grid.',
+      description: 'CSS (Cascading Style Sheets) transforms HTML into visually stunning websites with layouts, colors, fonts, and animations.',
       keyPoints: [
         'Controls visual presentation and layout.',
         'Responsive design with media queries.',
@@ -199,80 +131,15 @@ const Website = () => {
         ],
         resources: [
           { title: 'MDN CSS Basics', url: 'https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/CSS_basics' },
-          { title: 'W3Schools CSS Tutorial', url: 'https://www.w3schools.com/css/' },
-        ],
-      },
-      {
-        stage: 'Beginner',
-        title: 'Box Model & Positioning',
-        description: 'Understand the CSS box model and element positioning.',
-        tasks: [
-          'Experiment with margin, padding, border, width.',
-          'Use position: relative, absolute, fixed.',
-          'Center elements with margin: auto.',
-        ],
-        resources: [
-          { title: 'MDN CSS Box Model', url: 'https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Box_Model' },
-          { title: 'CSS Tricks Box Model', url: 'https://css-tricks.com/the-css-box-model/' },
-        ],
-      },
-      {
-        stage: 'Intermediate',
-        title: 'Flexbox & Grid',
-        description: 'Create modern, responsive layouts.',
-        tasks: [
-          'Build a navigation bar with Flexbox.',
-          'Create a photo gallery with Grid.',
-          'Use justify-content and align-items.',
-        ],
-        resources: [
-          { title: 'MDN Flexbox', url: 'https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Flexible_Box_Layout' },
-          { title: 'CSS Grid Garden', url: 'https://cssgridgarden.com/' },
-        ],
-      },
-      {
-        stage: 'Intermediate',
-        title: 'Responsive Design',
-        description: 'Make websites adapt to all devices.',
-        tasks: [
-          'Write media queries for mobile and desktop.',
-          'Use relative units (%, vw, rem, em).',
-          'Test responsiveness with browser dev tools.',
-        ],
-        resources: [
-          { title: 'MDN Responsive Design', url: 'https://developer.mozilla.org/en-US/docs/Learn/CSS/CSS_layout/Responsive_Design' },
-          { title: 'freeCodeCamp Responsive Web', url: 'https://www.freecodecamp.org/learn/2022/responsive-web-design/' },
-        ],
-      },
-      {
-        stage: 'Advanced',
-        title: 'Animations & Frameworks',
-        description: 'Add animations and use CSS frameworks.',
-        tasks: [
-          'Create transitions with transition property.',
-          'Animate elements with @keyframes.',
-          'Build a page with Tailwind CSS.',
-        ],
-        resources: [
-          { title: 'MDN CSS Animations', url: 'https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Animations' },
-          { title: 'Tailwind CSS Docs', url: 'https://tailwindcss.com/docs' },
         ],
       },
     ],
     tutorials: [
       { title: 'CSS Flexbox Tutorial (YouTube)', url: 'https://www.youtube.com/watch?v=phWxA89Dy94', type: 'Video', duration: '1h' },
-      { title: 'freeCodeCamp CSS Course', url: 'https://www.freecodecamp.org/learn/2022/responsive-web-design/', type: 'Course', duration: '4h' },
-      { title: 'W3Schools CSS Exercises', url: 'https://www.w3schools.com/css/css_exercises.asp', type: 'Interactive', duration: '30m' },
-      { title: 'CSS Tricks Guide', url: 'https://css-tricks.com/guides/', type: 'Article', duration: 'Varies' },
     ],
     tips: [
       'Use CSS variables for reusable values (--primary-color).',
       'Avoid !important; use specificity instead.',
-      'Test cross-browser compatibility (Chrome, Firefox, Safari).',
-      'Minify CSS for production to reduce file size.',
-      'Use shorthand properties (e.g., margin: 10px 20px).',
-      'Leverage dev tools to debug layouts.',
-      'Keep selectors simple to improve performance.',
     ],
     codeSnippets: [
       {
@@ -280,34 +147,16 @@ const Website = () => {
         code: `.nav {
   display: flex;
   justify-content: space-between;
-  align-items: center;
   padding: 10px;
-}
-.nav-item {
-  margin: 0 15px;
-}`,
-      },
-      {
-        title: 'Responsive Grid',
-        code: `.gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 10px;
-}
-@media (max-width: 600px) {
-  .gallery {
-    grid-template-columns: 1fr;
-  }
 }`,
       },
     ],
   };
 
-  // JavaScript Section Data
   const jsContent = {
     overview: {
       title: 'JavaScript: Interactivity Powerhouse',
-      description: 'JavaScript brings websites to life with dynamic behavior, from form validation to real-time updates. It manipulates the DOM, handles events, and fetches data from APIs.',
+      description: 'JavaScript brings websites to life with dynamic behavior, from form validation to real-time updates.',
       keyPoints: [
         'Manipulates the DOM for dynamic content.',
         'Handles events like clicks and inputs.',
@@ -327,80 +176,15 @@ const Website = () => {
         ],
         resources: [
           { title: 'MDN JavaScript Basics', url: 'https://developer.mozilla.org/en-US/docs/Learn/Getting_started_with_the_web/JavaScript_basics' },
-          { title: 'W3Schools JavaScript Tutorial', url: 'https://www.w3schools.com/js/' },
-        ],
-      },
-      {
-        stage: 'Beginner',
-        title: 'DOM Manipulation',
-        description: 'Interact with HTML elements dynamically.',
-        tasks: [
-          'Select elements with querySelector.',
-          'Change text with innerText.',
-          'Add event listeners for clicks.',
-        ],
-        resources: [
-          { title: 'MDN DOM', url: 'https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model' },
-          { title: 'JavaScript.info DOM', url: 'https://javascript.info/dom-nodes' },
-        ],
-      },
-      {
-        stage: 'Intermediate',
-        title: 'Arrays & Objects',
-        description: 'Work with complex data structures.',
-        tasks: [
-          'Use array methods: map, filter, reduce.',
-          'Create and access object properties.',
-          'Loop through arrays with forEach.',
-        ],
-        resources: [
-          { title: 'MDN Arrays', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array' },
-          { title: 'freeCodeCamp JavaScript', url: 'https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/' },
-        ],
-      },
-      {
-        stage: 'Intermediate',
-        title: 'Asynchronous JavaScript',
-        description: 'Handle asynchronous operations like API calls.',
-        tasks: [
-          'Use Promises with .then/.catch.',
-          'Write async/await functions.',
-          'Fetch data from a public API.',
-        ],
-        resources: [
-          { title: 'MDN Async JavaScript', url: 'https://developer.mozilla.org/en-US/docs/Learn/JavaScript/Asynchronous' },
-          { title: 'JavaScript.info Async', url: 'https://javascript.info/async' },
-        ],
-      },
-      {
-        stage: 'Advanced',
-        title: 'Frameworks & Libraries',
-        description: 'Build apps with modern JavaScript frameworks.',
-        tasks: [
-          'Create a React component.',
-          'Manage state with useState.',
-          'Build a small app with React Router.',
-        ],
-        resources: [
-          { title: 'React Docs', url: 'https://react.dev/' },
-          { title: 'Scrimba React Course', url: 'https://scrimba.com/learn/learnreact' },
         ],
       },
     ],
     tutorials: [
       { title: 'JavaScript for Beginners (YouTube)', url: 'https://www.youtube.com/watch?v=PkZNo7MFNFg', type: 'Video', duration: '3h' },
-      { title: 'freeCodeCamp JavaScript Course', url: 'https://www.freecodecamp.org/learn/javascript-algorithms-and-data-structures/', type: 'Course', duration: '6h' },
-      { title: 'W3Schools JavaScript Exercises', url: 'https://www.w3schools.com/js/js_exercises.asp', type: 'Interactive', duration: '30m' },
-      { title: 'MDN JavaScript Guide', url: 'https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide', type: 'Article', duration: 'Varies' },
     ],
     tips: [
       'Use strict mode ("use strict") to catch errors.',
       'Avoid global variables; use let/const.',
-      'Debug with console.log and browser dev tools.',
-      'Use arrow functions for concise code.',
-      'Handle errors with try/catch in async code.',
-      'Keep functions small and single-purpose.',
-      'Use ESLint to enforce code quality.',
     ],
     codeSnippets: [
       {
@@ -410,26 +194,13 @@ button.addEventListener('click', () => {
   alert('Button clicked!');
 });`,
       },
-      {
-        title: 'Fetch API Data',
-        code: `async function getData() {
-  try {
-    const response = await fetch('https://api.example.com/data');
-    const data = await response.json();
-    console.log(data);
-  } catch (error) {
-    console.error('Error:', error);
-  }
-}`,
-      },
     ],
   };
 
-  // Tools & Frameworks Section Data
   const toolsContent = {
     overview: {
       title: 'Tools & Frameworks: Build Like a Pro',
-      description: 'Tools and frameworks streamline web development, from coding to deployment. Learn editors, version control, build tools, and frameworks to create modern, scalable websites.',
+      description: 'Tools and frameworks streamline web development, from coding to deployment.',
       keyPoints: [
         'Editors like VS Code boost productivity.',
         'Version control (Git) tracks changes.',
@@ -449,113 +220,84 @@ button.addEventListener('click', () => {
         ],
         resources: [
           { title: 'VS Code Setup', url: 'https://code.visualstudio.com/docs/setup/setup-overview' },
-          { title: 'GitHub Getting Started', url: 'https://docs.github.com/en/get-started' },
-        ],
-      },
-      {
-        stage: 'Beginner',
-        title: 'Learn Version Control',
-        description: 'Master Git for collaboration and backups.',
-        tasks: [
-          'Create a repo and make commits.',
-          'Use git push, pull, and branch.',
-          'Resolve merge conflicts.',
-        ],
-        resources: [
-          { title: 'Git Handbook', url: 'https://guides.github.com/introduction/git-handbook/' },
-          { title: 'Atlassian Git Tutorial', url: 'https://www.atlassian.com/git/tutorials' },
-        ],
-      },
-      {
-        stage: 'Intermediate',
-        title: 'Build Tools & Package Managers',
-        description: 'Use tools to manage and optimize projects.',
-        tasks: [
-          'Create a project with Vite.',
-          'Install packages with npm or Yarn.',
-          'Bundle assets with a build tool.',
-        ],
-        resources: [
-          { title: 'Vite Docs', url: 'https://vitejs.dev/guide/' },
-          { title: 'npm Docs', url: 'https://docs.npmjs.com/' },
-        ],
-      },
-      {
-        stage: 'Intermediate',
-        title: 'Frontend Frameworks',
-        description: 'Build UIs with modern frameworks.',
-        tasks: [
-          'Create a React app with Vite.',
-          'Use Tailwind CSS for styling.',
-          'Explore Vue.js or Angular basics.',
-        ],
-        resources: [
-          { title: 'React Docs', url: 'https://react.dev/' },
-          { title: 'Tailwind CSS Docs', url: 'https://tailwindcss.com/docs' },
-        ],
-      },
-      {
-        stage: 'Advanced',
-        title: 'Backend & Deployment',
-        description: 'Learn backend tools and deploy apps.',
-        tasks: [
-          'Build an API with Node.js and Express.',
-          'Deploy a site to Vercel or Netlify.',
-          'Use Firebase for authentication.',
-        ],
-        resources: [
-          { title: 'Node.js Docs', url: 'https://nodejs.org/en/docs/' },
-          { title: 'Firebase Docs', url: 'https://firebase.google.com/docs' },
         ],
       },
     ],
     tutorials: [
       { title: 'Git for Beginners (YouTube)', url: 'https://www.youtube.com/watch?v=8JJ101D3knE', type: 'Video', duration: '1h' },
-      { title: 'freeCodeCamp React Course', url: 'https://www.freecodecamp.org/learn/2022/front-end-development-libraries/', type: 'Course', duration: '5h' },
-      { title: 'Vite Getting Started', url: 'https://vitejs.dev/guide/', type: 'Article', duration: 'Varies' },
-      { title: 'Firebase Authentication Tutorial', url: 'https://firebase.google.com/docs/auth/web/start', type: 'Article', duration: 'Varies' },
     ],
     tips: [
       'Use VS Code shortcuts (Ctrl+D, Alt+Click) to code faster.',
       'Commit often with clear messages in Git.',
-      'Use .gitignore to exclude sensitive files.',
-      'Test deployments in staging before production.',
-      'Leverage browser dev tools for debugging.',
-      'Keep package.json dependencies updated.',
-      'Use linters (ESLint, Stylelint) for clean code.',
     ],
     codeSnippets: [
       {
         title: 'Basic Vite Config',
         code: `import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-
-export default defineConfig({
-  plugins: [react()],
-});`,
-      },
-      {
-        title: 'Simple Express API',
-        code: `const express = require('express');
-const app = express();
-app.get('/api', (req, res) => {
-  res.json({ message: 'Hello, world!' });
-});
-app.listen(3000, () => console.log('Server running'));`,
+export default defineConfig({});`,
       },
     ],
   };
 
-  // Sample Paid Courses
-  const paidCourses = [
-    { title: 'Full-Stack Web Dev', price: '$99', duration: '10 weeks', description: 'Learn React, Node.js, MongoDB.' },
-    { title: 'Advanced HTML & CSS', price: '$59', duration: '4 weeks', description: 'Master responsive design, animations.' },
-    { title: 'JavaScript Deep Dive', price: '$79', duration: '6 weeks', description: 'ES6, APIs, async programming.' },
-    { title: 'React Pro', price: '$89', duration: '8 weeks', description: 'Hooks, context, performance.' },
-    { title: 'Backend with Node.js', price: '$99', duration: '10 weeks', description: 'APIs, databases, deployment.' },
-  ];
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      setUser(user);
+      if (user) {
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        if (userDoc.exists()) {
+          setPaidMentors(userDoc.data().paidMentors || []);
+        }
 
-  // Select 5 random quiz questions
+        // Fetch all users with mentor role
+        try {
+          setLoadingMentors(true);
+          const usersSnapshot = await getDocs(collection(db, 'users'));
+          const mentorList = [];
+          usersSnapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.role === 'mentor') {
+              mentorList.push({
+                id: doc.id,
+                name: data.name || 'Unnamed Mentor',
+                role: data.role || 'mentor',
+                skill: data.skill || 'General',
+                price: data.price || 50,
+                photo: data.photo || 'https://via.placeholder.com/150',
+                chatId: doc.id,
+                rating: data.rating || 0,
+              });
+            }
+          });
+          setMentors(mentorList);
+
+          // Fetch reviews for each mentor
+          const reviewsData = {};
+          for (const mentor of mentorList) {
+            const reviewsSnapshot = await getDocs(collection(db, 'users', mentor.id, 'reviews'));
+            const mentorReviews = [];
+            reviewsSnapshot.forEach((doc) => {
+              mentorReviews.push({ id: doc.id, ...doc.data() });
+            });
+            reviewsData[mentor.id] = mentorReviews;
+          }
+          setReviews(reviewsData);
+          setMentorError(null);
+        } catch (error) {
+          console.error('Error fetching mentors:', error);
+          setMentorError('Failed to load mentors. Please log in or try again later.');
+          setMentors([]);
+        } finally {
+          setLoadingMentors(false);
+        }
+      } else {
+        setMentorError('Please log in to view mentors.');
+        setMentors([]);
+        setLoadingMentors(false);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   const handleShowQuiz = () => {
     const shuffled = [...quizQuestions].sort(() => Math.random() - 0.5);
     setRandomQuestions(shuffled.slice(0, 5));
@@ -589,6 +331,48 @@ app.listen(3000, () => console.log('Server running'));`,
     setExpandedSection(expandedSection === section ? null : section);
   };
 
+  const handleEnroll = async (mentorId) => {
+    if (!user) {
+      toast.error('Please log in to enroll');
+      navigate('/login');
+      return;
+    }
+    const userRef = doc(db, 'users', user.uid);
+    const updatedPaidMentors = [...paidMentors, mentorId];
+    await updateDoc(userRef, { paidMentors: updatedPaidMentors });
+    setPaidMentors(updatedPaidMentors);
+    toast.success(`Enrolled with ${mentors.find(m => m.id === mentorId).name}!`);
+  };
+
+  const canChat = (mentorId) => paidMentors.includes(mentorId);
+
+  const handleReviewSubmit = async (mentorId) => {
+    if (!user) {
+      toast.error('Please log in to submit a review');
+      navigate('/login');
+      return;
+    }
+    if (!newReview[mentorId]) {
+      toast.error('Please enter a review');
+      return;
+    }
+
+    const reviewData = {
+      userId: user.uid,
+      userName: user.displayName || 'Anonymous',
+      review: newReview[mentorId],
+      timestamp: new Date().toISOString(),
+    };
+
+    await addDoc(collection(db, 'users', mentorId, 'reviews'), reviewData);
+    setReviews((prev) => ({
+      ...prev,
+      [mentorId]: [...(prev[mentorId] || []), reviewData],
+    }));
+    setNewReview((prev) => ({ ...prev, [mentorId]: '' }));
+    toast.success('Review submitted!');
+  };
+
   return (
     <section className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 px-4 sm:px-6 py-10">
       <motion.div
@@ -597,12 +381,10 @@ app.listen(3000, () => console.log('Server running'));`,
         transition={{ duration: 0.5 }}
         className="max-w-6xl mx-auto"
       >
-        {/* Header */}
         <h1 className="text-3xl mt-12 sm:text-4xl font-bold text-blue-600 mb-8 text-center">
           Website Development Hub
         </h1>
 
-        {/* Tabs */}
         <div className="flex justify-center mb-8">
           <div className="flex space-x-4 bg-white rounded-full shadow-md p-2">
             <button
@@ -630,7 +412,6 @@ app.listen(3000, () => console.log('Server running'));`,
           </div>
         </div>
 
-        {/* Content */}
         <motion.div
           key={activeTab}
           initial={{ opacity: 0, x: 20 }}
@@ -645,10 +426,9 @@ app.listen(3000, () => console.log('Server running'));`,
                 <span>Learn Web Development</span>
               </h2>
               <p className="text-gray-600">
-                Master web development with our comprehensive resources, roadmaps, tutorials, and quizzes. Explore HTML, CSS, JavaScript, and essential tools to build modern websites.
+                Master web development with our comprehensive resources, roadmaps, tutorials, and quizzes.
               </p>
 
-              {/* HTML Section */}
               <div>
                 <h3
                   className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
@@ -686,14 +466,12 @@ app.listen(3000, () => console.log('Server running'));`,
                             <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                               <h5 className="text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
                               <p className="text-gray-600">{step.description}</p>
-                              <p className="text-sm text-gray-600 mt-2">Tasks:</p>
-                              <ul className="list-disc list-inside text-gray-600">
+                              <ul className="list-disc list-inside text-gray-600 mt-2">
                                 {step.tasks.map((task, i) => (
                                   <li key={i}>{task}</li>
                                 ))}
                               </ul>
-                              <p className="text-sm text-gray-600 mt-2">Resources:</p>
-                              <ul className="list-disc list-inside text-gray-600">
+                              <ul className="list-disc list-inside text-gray-600 mt-2">
                                 {step.resources.map((res, i) => (
                                   <li key={i}>
                                     <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -716,12 +494,7 @@ app.listen(3000, () => console.log('Server running'));`,
                             <div key={idx} className="p-3 bg-gray-50 rounded-md border border-gray-200">
                               <p className="text-gray-800 font-medium">{tutorial.title}</p>
                               <p className="text-gray-600 text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
-                              <a
-                                href={tutorial.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
+                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                                 Start Learning
                               </a>
                             </div>
@@ -754,7 +527,6 @@ app.listen(3000, () => console.log('Server running'));`,
                 </AnimatePresence>
               </div>
 
-              {/* CSS Section */}
               <div>
                 <h3
                   className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
@@ -792,14 +564,12 @@ app.listen(3000, () => console.log('Server running'));`,
                             <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                               <h5 className="text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
                               <p className="text-gray-600">{step.description}</p>
-                              <p className="text-sm text-gray-600 mt-2">Tasks:</p>
-                              <ul className="list-disc list-inside text-gray-600">
+                              <ul className="list-disc list-inside text-gray-600 mt-2">
                                 {step.tasks.map((task, i) => (
                                   <li key={i}>{task}</li>
                                 ))}
                               </ul>
-                              <p className="text-sm text-gray-600 mt-2">Resources:</p>
-                              <ul className="list-disc list-inside text-gray-600">
+                              <ul className="list-disc list-inside text-gray-600 mt-2">
                                 {step.resources.map((res, i) => (
                                   <li key={i}>
                                     <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -822,12 +592,7 @@ app.listen(3000, () => console.log('Server running'));`,
                             <div key={idx} className="p-3 bg-gray-50 rounded-md border border-gray-200">
                               <p className="text-gray-800 font-medium">{tutorial.title}</p>
                               <p className="text-gray-600 text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
-                              <a
-                                href={tutorial.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
+                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                                 Start Learning
                               </a>
                             </div>
@@ -860,7 +625,6 @@ app.listen(3000, () => console.log('Server running'));`,
                 </AnimatePresence>
               </div>
 
-              {/* JavaScript Section */}
               <div>
                 <h3
                   className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
@@ -898,14 +662,12 @@ app.listen(3000, () => console.log('Server running'));`,
                             <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                               <h5 className="text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
                               <p className="text-gray-600">{step.description}</p>
-                              <p className="text-sm text-gray-600 mt-2">Tasks:</p>
-                              <ul className="list-disc list-inside text-gray-600">
+                              <ul className="list-disc list-inside text-gray-600 mt-2">
                                 {step.tasks.map((task, i) => (
                                   <li key={i}>{task}</li>
                                 ))}
                               </ul>
-                              <p className="text-sm text-gray-600 mt-2">Resources:</p>
-                              <ul className="list-disc list-inside text-gray-600">
+                              <ul className="list-disc list-inside text-gray-600 mt-2">
                                 {step.resources.map((res, i) => (
                                   <li key={i}>
                                     <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -928,12 +690,7 @@ app.listen(3000, () => console.log('Server running'));`,
                             <div key={idx} className="p-3 bg-gray-50 rounded-md border border-gray-200">
                               <p className="text-gray-800 font-medium">{tutorial.title}</p>
                               <p className="text-gray-600 text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
-                              <a
-                                href={tutorial.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
+                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                                 Start Learning
                               </a>
                             </div>
@@ -966,7 +723,6 @@ app.listen(3000, () => console.log('Server running'));`,
                 </AnimatePresence>
               </div>
 
-              {/* Tools & Frameworks Section */}
               <div>
                 <h3
                   className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
@@ -1004,14 +760,12 @@ app.listen(3000, () => console.log('Server running'));`,
                             <div key={idx} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                               <h5 className="text-base font-semibold text-gray-800">{step.title} ({step.stage})</h5>
                               <p className="text-gray-600">{step.description}</p>
-                              <p className="text-sm text-gray-600 mt-2">Tasks:</p>
-                              <ul className="list-disc list-inside text-gray-600">
+                              <ul className="list-disc list-inside text-gray-600 mt-2">
                                 {step.tasks.map((task, i) => (
                                   <li key={i}>{task}</li>
                                 ))}
                               </ul>
-                              <p className="text-sm text-gray-600 mt-2">Resources:</p>
-                              <ul className="list-disc list-inside text-gray-600">
+                              <ul className="list-disc list-inside text-gray-600 mt-2">
                                 {step.resources.map((res, i) => (
                                   <li key={i}>
                                     <a href={res.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
@@ -1034,12 +788,7 @@ app.listen(3000, () => console.log('Server running'));`,
                             <div key={idx} className="p-3 bg-gray-50 rounded-md border border-gray-200">
                               <p className="text-gray-800 font-medium">{tutorial.title}</p>
                               <p className="text-gray-600 text-sm">Type: {tutorial.type} | Duration: {tutorial.duration}</p>
-                              <a
-                                href={tutorial.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-600 hover:underline"
-                              >
+                              <a href={tutorial.url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
                                 Start Learning
                               </a>
                             </div>
@@ -1072,7 +821,6 @@ app.listen(3000, () => console.log('Server running'));`,
                 </AnimatePresence>
               </div>
 
-              {/* Project Ideas */}
               <div>
                 <h3
                   className="text-xl font-semibold text-gray-800 mb-4 flex items-center space-x-2 cursor-pointer"
@@ -1101,112 +849,176 @@ app.listen(3000, () => console.log('Server running'));`,
                         <li><strong>Chat App</strong>: Real-time messaging with Firebase.</li>
                       </ul>
                       <p className="text-gray-600">
-                        Push projects to GitHub (like your barter repo) to share with the community.
+                        Push projects to GitHub to share with the community.
                       </p>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
 
-              {/* Quiz Button */}
               <div className="text-center">
                 <button
                   onClick={handleShowQuiz}
                   className="flex items-center justify-center mx-auto space-x-2 bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition"
                 >
                   <Brain className="w-5 h-5" />
-                  <span>{showQuiz ? 'Hide Quiz' : 'Take the Web Dev Quiz'}</span>
+                  <span>Test Your Knowledge</span>
                 </button>
               </div>
 
-              {/* Interactive Quiz */}
-              {showQuiz && (
-                <div>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Test Your Knowledge</h3>
-                  <p className="text-gray-600 mb-4">
-                    Answer these 5 random questions to test your skills in HTML, CSS, JavaScript, and tools.
-                  </p>
-                  <form onSubmit={handleQuizSubmit} className="space-y-6">
-                    {randomQuestions.map((q) => (
-                      <div key={q.id} className="space-y-2">
-                        <p className="text-gray-800 font-medium">{q.question}</p>
-                        {q.options.map((option) => (
-                          <label key={option} className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              name={`question-${q.id}`}
-                              value={option[0]}
-                              checked={quizAnswers[q.id] === option[0]}
-                              onChange={() => handleQuizAnswer(q.id, option[0])}
-                              disabled={quizSubmitted}
-                              className="text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="text-gray-600">{option}</span>
-                            {quizSubmitted && (
-                              <>
-                                {quizAnswers[q.id] === option[0] && quizAnswers[q.id] === q.correctAnswer && (
+              <AnimatePresence>
+                {showQuiz && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="mt-6 space-y-4"
+                  >
+                    <h3 className="text-xl font-semibold text-gray-800">Web Development Quiz</h3>
+                    <p className="text-gray-600">Test your skills with 5 random questions.</p>
+                    <form onSubmit={handleQuizSubmit} className="space-y-4">
+                      {randomQuestions.map((q) => (
+                        <div key={q.id} className="space-y-2">
+                          <p className="text-gray-800">{q.question}</p>
+                          {q.options.map((option) => (
+                            <label key={option} className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                name={`question-${q.id}`}
+                                value={option[0]}
+                                checked={quizAnswers[q.id] === option[0]}
+                                onChange={() => handleQuizAnswer(q.id, option[0])}
+                                disabled={quizSubmitted}
+                                className="text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-gray-700">{option}</span>
+                              {quizSubmitted && quizAnswers[q.id] === option[0] && (
+                                quizAnswers[q.id] === q.correctAnswer ? (
                                   <CheckCircle className="w-5 h-5 text-green-500" />
-                                )}
-                                {quizAnswers[q.id] === option[0] && quizAnswers[q.id] !== q.correctAnswer && (
+                                ) : (
                                   <XCircle className="w-5 h-5 text-red-500" />
-                                )}
-                              </>
-                            )}
-                          </label>
-                        ))}
+                                )
+                              )}
+                            </label>
+                          ))}
+                        </div>
+                      ))}
+                      <div className="flex justify-end space-x-4">
+                        <button
+                          type="submit"
+                          disabled={quizSubmitted || Object.keys(quizAnswers).length < randomQuestions.length}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 disabled:bg-gray-400 transition"
+                        >
+                          {quizSubmitted ? 'Submitted' : 'Submit Quiz'}
+                        </button>
                       </div>
-                    ))}
-                    <div className="flex justify-end">
-                      <button
-                        type="submit"
-                        disabled={quizSubmitted || Object.keys(quizAnswers).length < randomQuestions.length}
-                        className="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-700 transition disabled:bg-blue-400"
-                      >
-                        {quizSubmitted ? 'Submitted' : 'Submit Quiz'}
-                      </button>
-                    </div>
-                  </form>
-                  {quizSubmitted && (
-                    <div className="mt-4 p-4 bg-blue-50 rounded-md">
-                      <p className="text-gray-800 font-medium">
-                        Your Score: {score} out of {randomQuestions.length}
-                      </p>
-                      <p className="text-gray-600">
-                        {score === randomQuestions.length
-                          ? 'Perfect! You’re a web dev pro!'
-                          : score >= randomQuestions.length / 2
-                          ? 'Nice work! Review incorrect answers to level up.'
-                          : 'Keep learning! Check the resources above.'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+                    </form>
+                    {quizSubmitted && (
+                      <div className="p-4 bg-blue-50 rounded-md">
+                        <p className="text-gray-800 font-medium">Your Score: {score}/5</p>
+                        <p className="text-gray-600">
+                          {score === 5 ? 'Perfect! You’re a pro!' : score >= 3 ? 'Good job! Review mistakes.' : 'Keep learning!'}
+                        </p>
+                      </div>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           ) : (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Premium Courses</h2>
+            <div className="space-y-8">
+              <h2 className="text-2xl font-bold text-gray-800 flex items-center space-x-2">
+                <DollarSign className="w-6 h-6 text-green-600" />
+                <span>Paid Mentorship Programs</span>
+              </h2>
               <p className="text-gray-600">
-                Unlock advanced web development skills with our premium courses, designed for all levels.
+                Connect with experienced mentors for personalized guidance and advanced learning.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {paidCourses.map((course, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="p-4 bg-gray-50 rounded-lg border border-gray-200"
-                  >
-                    <h4 className="text-lg font-semibold text-gray-800">{course.title}</h4>
-                    <p className="text-gray-600">{course.description}</p>
-                    <p className="text-gray-600">Price: {course.price}</p>
-                    <p className="text-gray-600">Duration: {course.duration}</p>
-                    <button className="mt-2 bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700">
-                      Enroll Now
-                    </button>
-                  </motion.div>
-                ))}
-              </div>
+              {loadingMentors ? (
+                <p className="text-gray-600 text-center">Loading mentors...</p>
+              ) : mentorError ? (
+                <p className="text-red-500 text-center">{mentorError}</p>
+              ) : mentors.length === 0 ? (
+                <p className="text-gray-600 text-center">No mentors available at the moment.</p>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {mentors.map((mentor) => (
+                    <motion.div
+                      key={mentor.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="bg-gray-50 rounded-lg p-4 border border-gray-200 shadow-sm hover:shadow-md transition"
+                    >
+                      <img
+                        src={mentor.photo}
+                        alt={`${mentor.name}'s profile`}
+                        className="w-24 h-24 rounded-full mx-auto mb-4 object-cover"
+                      />
+                      <h3 className="text-lg font-semibold text-gray-800 text-center">
+                        {mentor.name} ({mentor.role === 'mentor' ? 'Mentor' : 'Normal User'})
+                      </h3>
+                      <p className="text-gray-600 text-center">Skill: {mentor.skill}</p>
+                      <p className="text-gray-600 text-center">Price: ${mentor.price}/hour</p>
+                      <div className="flex items-center justify-center space-x-1 mt-2">
+                        <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                        <span className="text-gray-700">{mentor.rating.toFixed(1)}/5</span>
+                      </div>
+                      <div className="mt-4 flex flex-col space-y-2">
+                        <button
+                          onClick={() => handleEnroll(mentor.id)}
+                          disabled={paidMentors.includes(mentor.id)}
+                          className="bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700 disabled:bg-gray-400 transition"
+                        >
+                          {paidMentors.includes(mentor.id) ? 'Enrolled' : 'Enroll Now'}
+                        </button>
+                        <button
+                          onClick={() => canChat(mentor.id) ? navigate(`/chat/${mentor.chatId}`) : null}
+                          disabled={!canChat(mentor.id)}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 disabled:bg-gray-400 transition"
+                        >
+                          {canChat(mentor.id) ? 'Chat Now' : 'Enroll to Chat'}
+                        </button>
+                      </div>
+                      <div className="mt-4">
+                        <h4 className="text-md font-semibold text-gray-800">Reviews</h4>
+                        {reviews[mentor.id] && reviews[mentor.id].length > 0 ? (
+                          <ul className="space-y-2 mt-2">
+                            {reviews[mentor.id].slice(0, 2).map((review) => (
+                              <li key={review.id} className="text-gray-600 text-sm">
+                                {review.userName}: {review.review}
+                              </li>
+                            ))}
+                            {reviews[mentor.id].length > 2 && (
+                              <button
+                                onClick={() => alert(reviews[mentor.id].map(r => `${r.userName}: ${r.review}`).join('\n'))}
+                                className="text-blue-600 hover:underline text-xs"
+                              >
+                                See all {reviews[mentor.id].length} reviews
+                              </button>
+                            )}
+                          </ul>
+                        ) : (
+                          <p className="text-gray-600 text-sm">No reviews yet.</p>
+                        )}
+                        <textarea
+                          value={newReview[mentor.id] || ''}
+                          onChange={(e) => setNewReview({ ...newReview, [mentor.id]: e.target.value })}
+                          placeholder="Write a review..."
+                          className="w-full mt-2 p-2 border border-gray-300 rounded-md text-sm"
+                        />
+                        <button
+                          onClick={() => handleReviewSubmit(mentor.id)}
+                          className="mt-2 bg-blue-600 text-white px-3 py-1 rounded-full hover:bg-blue-700 text-sm"
+                        >
+                          Submit Review
+                        </button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </motion.div>
