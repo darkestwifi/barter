@@ -394,7 +394,7 @@ export default defineConfig({});`,
               }`}
             >
               <DollarSign className="w-4 sm:w-5 h-4 sm:h-5" />
-              <span>Paid Courses</span>
+              <span>Premium</span>
             </button>
           </div>
         </div>
