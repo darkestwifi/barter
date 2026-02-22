@@ -54,7 +54,6 @@ Backend & Services
 
 ☁️ Firebase Firestore 
 
-📦 Firebase Storage (if used)
 
 Deployment
 
