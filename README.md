@@ -46,7 +46,7 @@ Frontend
 
 🧩 React Router
 
-🎨 CSS / Tailwind / Styled Components (edit if needed)
+🎨 CSS / Tailwind / Styled Components 
 
 Backend & Services
 
