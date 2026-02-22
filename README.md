@@ -1,12 +1,61 @@
-# React + Vite
+🧠 Barter — Skill Exchange Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Barter is a modern web application that allows users to exchange skills with each other instead of money. The platform also provides paid courses, mentor chat, personal note-taking, and secure authentication — creating a complete learning ecosystem.
 
-Currently, two official plugins are available:
+🔗 Live Website: https://barter-drab.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+🚀 Features
+🔄 Skill Exchange (Barter System)
 
-## Expanding the ESLint configuration
+Trade skills with other users
 
-If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Learn something new without paying money
+
+Offer your expertise and gain knowledge
+
+📚 Paid Courses
+
+Access structured premium courses
+
+Learn from curated content
+
+🧑‍🏫 Mentor Chat
+
+Communicate directly with mentors
+
+Get guidance, doubt solving, and advice
+
+📝 Personal Notes
+
+Create and store your own notes
+
+Organize learning materials in one place
+
+🔐 Authentication
+
+Secure Login & Signup
+
+User account management
+
+Protected routes
+
+🛠️ Tech Stack
+Frontend
+
+⚛️ React.js
+
+🧩 React Router
+
+🎨 CSS / Tailwind / Styled Components (edit if needed)
+
+Backend & Services
+
+🔥 Firebase Authentication
+
+☁️ Firebase Firestore 
+
+📦 Firebase Storage (if used)
+
+Deployment
+
+▲ Vercel
